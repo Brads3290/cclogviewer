@@ -40,11 +40,34 @@ func ProcessEntries(entries []models.LogEntry) []*models.ProcessedEntry {
 		}
 	}
 
-	// Third pass: group sidechain entries with their corresponding Task tool calls
+	// Third pass: build a map of tool calls in sidechain entries
+	sidechainToolCallMap := make(map[string]*models.ToolCall) // Map tool ID to ToolCall for sidechains
+	for _, entry := range entryMap {
+		if entry.IsSidechain {
+			for i := range entry.ToolCalls {
+				sidechainToolCallMap[entry.ToolCalls[i].ID] = &entry.ToolCalls[i]
+			}
+		}
+	}
+
+	// Fourth pass: attach tool results to sidechain tool calls
+	for _, entry := range entryMap {
+		if entry.IsSidechain && entry.IsToolResult && entry.ToolResultID != "" {
+			if toolCall, exists := sidechainToolCallMap[entry.ToolResultID]; exists {
+				toolCall.Result = entry
+			}
+		}
+	}
+
+	// Fifth pass: group sidechain entries with their corresponding Task tool calls
 	// Match Task tool calls with their sidechain entries based on timing
 	var sidechainRoots []*models.ProcessedEntry
 	for _, processed := range entryMap {
 		if processed.IsSidechain && processed.ParentUUID == "" {
+			// Skip tool results that are attached to tool calls
+			if processed.IsToolResult {
+				continue
+			}
 			sidechainRoots = append(sidechainRoots, processed)
 		}
 	}
@@ -78,6 +101,9 @@ func ProcessEntries(entries []models.LogEntry) []*models.ProcessedEntry {
 		if bestMatch != nil && len(bestMatch.TaskEntries) == 0 {
 			bestMatch.TaskEntries = collectSidechainEntries(sidechain, entryMap)
 			log.Printf("Attached %d sidechain entries to Task tool call", len(bestMatch.TaskEntries))
+			for _, entry := range bestMatch.TaskEntries {
+				log.Printf("  - Entry: UUID=%s, Role=%s, IsToolResult=%v", entry.UUID, entry.Role, entry.IsToolResult)
+			}
 		} else if bestMatch == nil {
 			log.Printf("No matching Task tool call found for sidechain at %s", sidechain.RawTimestamp)
 		}
@@ -132,11 +158,26 @@ func processEntry(entry models.LogEntry) *models.ProcessedEntry {
 func collectSidechainEntries(root *models.ProcessedEntry, entryMap map[string]*models.ProcessedEntry) []*models.ProcessedEntry {
 	var result []*models.ProcessedEntry
 	
+	// First, collect all tool results that are attached to tool calls
+	attachedToolResults := make(map[string]bool)
+	for _, entry := range entryMap {
+		if entry.IsSidechain {
+			for _, toolCall := range entry.ToolCalls {
+				if toolCall.Result != nil {
+					attachedToolResults[toolCall.Result.UUID] = true
+				}
+			}
+		}
+	}
+	
 	// Build the sidechain tree structure
-	var buildTree func(entry *models.ProcessedEntry, depth int)
-	buildTree = func(entry *models.ProcessedEntry, depth int) {
-		entry.Depth = depth
-		result = append(result, entry)
+	var buildTree func(entry *models.ProcessedEntry, depth int, skipEntry bool)
+	buildTree = func(entry *models.ProcessedEntry, depth int, skipEntry bool) {
+		// Add to result only if we're not skipping this entry
+		if !skipEntry {
+			entry.Depth = depth
+			result = append(result, entry)
+		}
 		
 		// Find and add children
 		for _, e := range entryMap {
@@ -147,11 +188,14 @@ func collectSidechainEntries(root *models.ProcessedEntry, entryMap map[string]*m
 		
 		// Recursively process children
 		for _, child := range entry.Children {
-			buildTree(child, depth+1)
+			// Skip tool results that have been attached to tool calls when adding to result,
+			// but still process their children
+			shouldSkip := child.IsToolResult && attachedToolResults[child.UUID]
+			buildTree(child, depth+1, shouldSkip)
 		}
 	}
 	
-	buildTree(root, 0)
+	buildTree(root, 0, false)
 	return result
 }
 
