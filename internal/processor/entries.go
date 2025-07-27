@@ -1,0 +1,189 @@
+package processor
+
+import (
+	"cclogviewer/internal/models"
+	"encoding/json"
+	"log"
+	"time"
+)
+
+// ProcessEntries processes raw log entries into a structured format
+func ProcessEntries(entries []models.LogEntry) []*models.ProcessedEntry {
+	// Create a map for quick lookup
+	entryMap := make(map[string]*models.ProcessedEntry)
+	var rootEntries []*models.ProcessedEntry
+	toolCallMap := make(map[string]*models.ToolCall) // Map tool ID to ToolCall
+
+	// First pass: create all processed entries
+	for _, entry := range entries {
+		processed := processEntry(entry)
+		entryMap[processed.UUID] = processed
+		
+		// Track tool calls for later matching
+		for i := range processed.ToolCalls {
+			toolCallMap[processed.ToolCalls[i].ID] = &processed.ToolCalls[i]
+		}
+	}
+
+	// Second pass: build chronological list of main conversation entries
+	for _, entry := range entries {
+		if !entry.IsSidechain {
+			processed := entryMap[entry.UUID]
+			// If this is a tool result, attach it to the corresponding tool call
+			if processed.IsToolResult && processed.ToolResultID != "" {
+				if toolCall, exists := toolCallMap[processed.ToolResultID]; exists {
+					toolCall.Result = processed
+					continue // Don't add as a regular entry
+				}
+			}
+			rootEntries = append(rootEntries, processed)
+		}
+	}
+
+	// Third pass: group sidechain entries with their corresponding Task tool calls
+	// Match Task tool calls with their sidechain entries based on timing
+	var sidechainRoots []*models.ProcessedEntry
+	for _, processed := range entryMap {
+		if processed.IsSidechain && processed.ParentUUID == "" {
+			sidechainRoots = append(sidechainRoots, processed)
+		}
+	}
+	
+	// Debug: log sidechain count
+	if len(sidechainRoots) > 0 {
+		log.Printf("Found %d sidechain root entries", len(sidechainRoots))
+	}
+	
+	for _, sidechain := range sidechainRoots {
+		// Find the most recent Task tool call before this sidechain entry
+		var bestMatch *models.ToolCall
+		var bestTimeStr string
+		
+		for _, entry := range entryMap {
+			for i := range entry.ToolCalls {
+				if entry.ToolCalls[i].Name == "Task" {
+					// Compare raw timestamps
+					if entry.RawTimestamp < sidechain.RawTimestamp {
+						if bestMatch == nil || entry.RawTimestamp > bestTimeStr {
+							bestMatch = &entry.ToolCalls[i]
+							bestTimeStr = entry.RawTimestamp
+							log.Printf("Found potential Task match: tool at %s for sidechain at %s", entry.RawTimestamp, sidechain.RawTimestamp)
+						}
+					}
+				}
+			}
+		}
+		
+		// If we found a matching Task tool call, attach the sidechain entries
+		if bestMatch != nil && len(bestMatch.TaskEntries) == 0 {
+			bestMatch.TaskEntries = collectSidechainEntries(sidechain, entryMap)
+			log.Printf("Attached %d sidechain entries to Task tool call", len(bestMatch.TaskEntries))
+		} else if bestMatch == nil {
+			log.Printf("No matching Task tool call found for sidechain at %s", sidechain.RawTimestamp)
+		}
+	}
+
+	// No need to calculate depths for chronological display
+
+	return rootEntries
+}
+
+func processEntry(entry models.LogEntry) *models.ProcessedEntry {
+	processed := &models.ProcessedEntry{
+		UUID:         entry.UUID,
+		IsSidechain:  entry.IsSidechain,
+		Type:         entry.Type,
+		Timestamp:    formatTimestamp(entry.Timestamp),
+		RawTimestamp: entry.Timestamp,
+	}
+
+	if entry.ParentUUID != nil {
+		processed.ParentUUID = *entry.ParentUUID
+	}
+
+	// Process the message content
+	var msg map[string]interface{}
+	if err := json.Unmarshal(entry.Message, &msg); err == nil {
+		processed.Role = GetStringValue(msg, "role")
+		
+		// Handle different message types
+		switch processed.Type {
+		case "user":
+			processed.Content = ProcessUserMessage(msg)
+			processed.IsToolResult = isToolResult(msg)
+		case "assistant":
+			processed.Content, processed.ToolCalls = ProcessAssistantMessage(msg)
+		}
+		
+		// Check if it's an error and extract tool result ID
+		if processed.IsToolResult {
+			if content, ok := msg["content"].([]interface{}); ok && len(content) > 0 {
+				if toolResult, ok := content[0].(map[string]interface{}); ok {
+					processed.IsError = GetBoolValue(toolResult, "is_error")
+					processed.ToolResultID = GetStringValue(toolResult, "tool_use_id")
+				}
+			}
+		}
+	}
+
+	return processed
+}
+
+func collectSidechainEntries(root *models.ProcessedEntry, entryMap map[string]*models.ProcessedEntry) []*models.ProcessedEntry {
+	var result []*models.ProcessedEntry
+	
+	// Build the sidechain tree structure
+	var buildTree func(entry *models.ProcessedEntry, depth int)
+	buildTree = func(entry *models.ProcessedEntry, depth int) {
+		entry.Depth = depth
+		result = append(result, entry)
+		
+		// Find and add children
+		for _, e := range entryMap {
+			if e.ParentUUID == entry.UUID && e.IsSidechain {
+				entry.Children = append(entry.Children, e)
+			}
+		}
+		
+		// Recursively process children
+		for _, child := range entry.Children {
+			buildTree(child, depth+1)
+		}
+	}
+	
+	buildTree(root, 0)
+	return result
+}
+
+func formatTimestamp(ts string) string {
+	t, err := time.Parse(time.RFC3339, ts)
+	if err != nil {
+		return ts
+	}
+	return t.Format("15:04:05")
+}
+
+func isToolResult(msg map[string]interface{}) bool {
+	if content, ok := msg["content"].([]interface{}); ok && len(content) > 0 {
+		if toolResult, ok := content[0].(map[string]interface{}); ok {
+			return GetStringValue(toolResult, "type") == "tool_result"
+		}
+	}
+	return false
+}
+
+// GetStringValue extracts a string value from a map
+func GetStringValue(m map[string]interface{}, key string) string {
+	if val, ok := m[key].(string); ok {
+		return val
+	}
+	return ""
+}
+
+// GetBoolValue extracts a bool value from a map
+func GetBoolValue(m map[string]interface{}, key string) bool {
+	if val, ok := m[key].(bool); ok {
+		return val
+	}
+	return false
+}
