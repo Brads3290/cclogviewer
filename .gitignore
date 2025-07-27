@@ -1,6 +1,5 @@
-# Binary
-cclogviewer
-cclogviewer-*
+# Build directory
+bin/
 
 # Test outputs
 *.html

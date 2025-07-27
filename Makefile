@@ -3,6 +3,9 @@
 # Binary name
 BINARY_NAME=cclogviewer
 
+# Build directory
+BUILD_DIR=bin
+
 # Go parameters
 GOCMD=go
 GOBUILD=$(GOCMD) build
@@ -23,31 +26,35 @@ INSTALL_DIR=$(PREFIX)/bin
 # Default target
 .DEFAULT_GOAL := build
 
+# Create build directory
+$(BUILD_DIR):
+	@mkdir -p $(BUILD_DIR)
+
 # Build the binary
-build:
-	$(GOBUILD) -o $(BINARY_NAME) -v
+build: $(BUILD_DIR)
+	$(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME) -v
 
 # Build with version info
-build-release:
-	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME) -v
+build-release: $(BUILD_DIR)
+	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) -v
 
 # Run the application with example
 run: build
-	./$(BINARY_NAME) -input example.jsonl
+	./$(BUILD_DIR)/$(BINARY_NAME) -input example.jsonl
 
 # Run quick view (auto-open)
 run-quick: build
-	./$(BINARY_NAME) -input example.jsonl
+	./$(BUILD_DIR)/$(BINARY_NAME) -input example.jsonl
 
 # Run with specific output
 run-output: build
-	./$(BINARY_NAME) -input example.jsonl -output test_output.html -open
+	./$(BUILD_DIR)/$(BINARY_NAME) -input example.jsonl -output test_output.html -open
 
 # Install the binary
 install: build
 	@echo "Installing $(BINARY_NAME) to $(INSTALL_DIR)"
 	@mkdir -p $(INSTALL_DIR)
-	@cp $(BINARY_NAME) $(INSTALL_DIR)/
+	@cp $(BUILD_DIR)/$(BINARY_NAME) $(INSTALL_DIR)/
 	@chmod 755 $(INSTALL_DIR)/$(BINARY_NAME)
 	@echo "Installation complete. You can now run '$(BINARY_NAME)' from anywhere."
 
@@ -60,7 +67,7 @@ uninstall:
 # Clean build artifacts
 clean:
 	$(GOCLEAN)
-	rm -f $(BINARY_NAME)
+	rm -rf $(BUILD_DIR)
 	rm -f test_output.html
 	rm -f example_*.html
 
@@ -80,26 +87,25 @@ lint:
 # Build for multiple platforms
 build-all: build-linux build-darwin build-windows
 
-build-linux:
-	GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINARY_NAME)-linux-amd64 -v
-	GOOS=linux GOARCH=arm64 $(GOBUILD) -o $(BINARY_NAME)-linux-arm64 -v
+build-linux: $(BUILD_DIR)
+	GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME)-linux-amd64 -v
+	GOOS=linux GOARCH=arm64 $(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME)-linux-arm64 -v
 
-build-darwin:
-	GOOS=darwin GOARCH=amd64 $(GOBUILD) -o $(BINARY_NAME)-darwin-amd64 -v
-	GOOS=darwin GOARCH=arm64 $(GOBUILD) -o $(BINARY_NAME)-darwin-arm64 -v
+build-darwin: $(BUILD_DIR)
+	GOOS=darwin GOARCH=amd64 $(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-amd64 -v
+	GOOS=darwin GOARCH=arm64 $(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-arm64 -v
 
-build-windows:
-	GOOS=windows GOARCH=amd64 $(GOBUILD) -o $(BINARY_NAME)-windows-amd64.exe -v
+build-windows: $(BUILD_DIR)
+	GOOS=windows GOARCH=amd64 $(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME)-windows-amd64.exe -v
 
 # Create release archives
 release: build-all
 	mkdir -p dist
-	tar -czf dist/$(BINARY_NAME)-linux-amd64.tar.gz $(BINARY_NAME)-linux-amd64 README.md
-	tar -czf dist/$(BINARY_NAME)-linux-arm64.tar.gz $(BINARY_NAME)-linux-arm64 README.md
-	tar -czf dist/$(BINARY_NAME)-darwin-amd64.tar.gz $(BINARY_NAME)-darwin-amd64 README.md
-	tar -czf dist/$(BINARY_NAME)-darwin-arm64.tar.gz $(BINARY_NAME)-darwin-arm64 README.md
-	zip dist/$(BINARY_NAME)-windows-amd64.zip $(BINARY_NAME)-windows-amd64.exe README.md
-	rm $(BINARY_NAME)-*
+	tar -czf dist/$(BINARY_NAME)-linux-amd64.tar.gz -C $(BUILD_DIR) $(BINARY_NAME)-linux-amd64 -C .. README.md
+	tar -czf dist/$(BINARY_NAME)-linux-arm64.tar.gz -C $(BUILD_DIR) $(BINARY_NAME)-linux-arm64 -C .. README.md
+	tar -czf dist/$(BINARY_NAME)-darwin-amd64.tar.gz -C $(BUILD_DIR) $(BINARY_NAME)-darwin-amd64 -C .. README.md
+	tar -czf dist/$(BINARY_NAME)-darwin-arm64.tar.gz -C $(BUILD_DIR) $(BINARY_NAME)-darwin-arm64 -C .. README.md
+	cd $(BUILD_DIR) && zip ../dist/$(BINARY_NAME)-windows-amd64.zip $(BINARY_NAME)-windows-amd64.exe && cd .. && zip -j dist/$(BINARY_NAME)-windows-amd64.zip README.md
 
 # Show help
 help:
