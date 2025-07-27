@@ -41,6 +41,7 @@ type ProcessedEntry struct {
 	IsSidechain  bool
 	Type         string
 	Timestamp    string
+	RawTimestamp string // Keep the raw timestamp for comparisons
 	Role         string
 	Content      template.HTML
 	ToolCalls    []ToolCall
@@ -48,6 +49,7 @@ type ProcessedEntry struct {
 	IsError      bool
 	Children     []*ProcessedEntry
 	Depth        int
+	ToolResultID string // For matching tool results to tool calls
 }
 
 // ToolCall represents a tool invocation
@@ -56,6 +58,8 @@ type ToolCall struct {
 	Name        string
 	Description string
 	Input       template.HTML
+	Result      *ProcessedEntry // Tool result entry
+	TaskEntries []*ProcessedEntry // For Task tool - sidechain entries
 }
 
 func main() {
@@ -138,28 +142,106 @@ func processEntries(entries []LogEntry) []*ProcessedEntry {
 	// Create a map for quick lookup
 	entryMap := make(map[string]*ProcessedEntry)
 	var rootEntries []*ProcessedEntry
+	toolCallMap := make(map[string]*ToolCall) // Map tool ID to ToolCall
 
 	// First pass: create all processed entries
 	for _, entry := range entries {
 		processed := processEntry(entry)
 		entryMap[processed.UUID] = processed
-	}
-
-	// Second pass: build tree structure
-	for _, processed := range entryMap {
-		if processed.ParentUUID == "" {
-			rootEntries = append(rootEntries, processed)
-		} else if parent, exists := entryMap[processed.ParentUUID]; exists {
-			parent.Children = append(parent.Children, processed)
+		
+		// Track tool calls for later matching
+		for i := range processed.ToolCalls {
+			toolCallMap[processed.ToolCalls[i].ID] = &processed.ToolCalls[i]
 		}
 	}
 
-	// Calculate depths
-	for _, root := range rootEntries {
-		calculateDepth(root, 0)
+	// Second pass: build chronological list of main conversation entries
+	for _, entry := range entries {
+		if !entry.IsSidechain {
+			processed := entryMap[entry.UUID]
+			// If this is a tool result, attach it to the corresponding tool call
+			if processed.IsToolResult && processed.ToolResultID != "" {
+				if toolCall, exists := toolCallMap[processed.ToolResultID]; exists {
+					toolCall.Result = processed
+					continue // Don't add as a regular entry
+				}
+			}
+			rootEntries = append(rootEntries, processed)
+		}
 	}
 
+	// Third pass: group sidechain entries with their corresponding Task tool calls
+	// Match Task tool calls with their sidechain entries based on timing
+	var sidechainRoots []*ProcessedEntry
+	for _, processed := range entryMap {
+		if processed.IsSidechain && processed.ParentUUID == "" {
+			sidechainRoots = append(sidechainRoots, processed)
+		}
+	}
+	
+	// Debug: log sidechain count
+	if len(sidechainRoots) > 0 {
+		log.Printf("Found %d sidechain root entries", len(sidechainRoots))
+	}
+	
+	for _, sidechain := range sidechainRoots {
+		// Find the most recent Task tool call before this sidechain entry
+		var bestMatch *ToolCall
+		var bestTimeStr string
+		
+		for _, entry := range entryMap {
+			for i := range entry.ToolCalls {
+				if entry.ToolCalls[i].Name == "Task" {
+					// Compare raw timestamps
+					if entry.RawTimestamp < sidechain.RawTimestamp {
+						if bestMatch == nil || entry.RawTimestamp > bestTimeStr {
+							bestMatch = &entry.ToolCalls[i]
+							bestTimeStr = entry.RawTimestamp
+							log.Printf("Found potential Task match: tool at %s for sidechain at %s", entry.RawTimestamp, sidechain.RawTimestamp)
+						}
+					}
+				}
+			}
+		}
+		
+		// If we found a matching Task tool call, attach the sidechain entries
+		if bestMatch != nil && len(bestMatch.TaskEntries) == 0 {
+			bestMatch.TaskEntries = collectSidechainEntries(sidechain, entryMap)
+			log.Printf("Attached %d sidechain entries to Task tool call", len(bestMatch.TaskEntries))
+		} else if bestMatch == nil {
+			log.Printf("No matching Task tool call found for sidechain at %s", sidechain.RawTimestamp)
+		}
+	}
+
+	// No need to calculate depths for chronological display
+
 	return rootEntries
+}
+
+func collectSidechainEntries(root *ProcessedEntry, entryMap map[string]*ProcessedEntry) []*ProcessedEntry {
+	var result []*ProcessedEntry
+	
+	// Build the sidechain tree structure
+	var buildTree func(entry *ProcessedEntry, depth int)
+	buildTree = func(entry *ProcessedEntry, depth int) {
+		entry.Depth = depth
+		result = append(result, entry)
+		
+		// Find and add children
+		for _, e := range entryMap {
+			if e.ParentUUID == entry.UUID && e.IsSidechain {
+				entry.Children = append(entry.Children, e)
+			}
+		}
+		
+		// Recursively process children
+		for _, child := range entry.Children {
+			buildTree(child, depth+1)
+		}
+	}
+	
+	buildTree(root, 0)
+	return result
 }
 
 func calculateDepth(entry *ProcessedEntry, depth int) {
@@ -171,10 +253,11 @@ func calculateDepth(entry *ProcessedEntry, depth int) {
 
 func processEntry(entry LogEntry) *ProcessedEntry {
 	processed := &ProcessedEntry{
-		UUID:        entry.UUID,
-		IsSidechain: entry.IsSidechain,
-		Type:        entry.Type,
-		Timestamp:   formatTimestamp(entry.Timestamp),
+		UUID:         entry.UUID,
+		IsSidechain:  entry.IsSidechain,
+		Type:         entry.Type,
+		Timestamp:    formatTimestamp(entry.Timestamp),
+		RawTimestamp: entry.Timestamp,
 	}
 
 	if entry.ParentUUID != nil {
@@ -195,11 +278,12 @@ func processEntry(entry LogEntry) *ProcessedEntry {
 			processed.Content, processed.ToolCalls = processAssistantMessage(msg)
 		}
 		
-		// Check if it's an error
+		// Check if it's an error and extract tool result ID
 		if processed.IsToolResult {
 			if content, ok := msg["content"].([]interface{}); ok && len(content) > 0 {
 				if toolResult, ok := content[0].(map[string]interface{}); ok {
 					processed.IsError = getBoolValue(toolResult, "is_error")
+					processed.ToolResultID = getStringValue(toolResult, "tool_use_id")
 				}
 			}
 		}
@@ -223,7 +307,17 @@ func processUserMessage(msg map[string]interface{}) template.HTML {
 	if contentArray, ok := msg["content"].([]interface{}); ok && len(contentArray) > 0 {
 		if toolResult, ok := contentArray[0].(map[string]interface{}); ok {
 			if toolType := getStringValue(toolResult, "type"); toolType == "tool_result" {
-				toolContent := getStringValue(toolResult, "content")
+				// Handle different content types
+				var toolContent string
+				if contentVal, ok := toolResult["content"].(string); ok {
+					toolContent = contentVal
+				} else if contentArray, ok := toolResult["content"].([]interface{}); ok && len(contentArray) > 0 {
+					// Handle array content (like from Task tool)
+					if textContent, ok := contentArray[0].(map[string]interface{}); ok {
+						toolContent = getStringValue(textContent, "text")
+					}
+				}
+				
 				isError := getBoolValue(toolResult, "is_error")
 				
 				if isError {
@@ -380,8 +474,21 @@ func generateHTML(entries []*ProcessedEntry, outputFile string) error {
         }
         
         .entry.sidechain {
-            margin-left: 40px;
             opacity: 0.9;
+        }
+        
+        .entry.sidechain.user {
+            background: #f0fff4; /* Same green background as main assistant */
+            border-left-color: #27ae60; /* Green border like main assistant */
+        }
+        
+        .entry.sidechain.assistant {
+            background: #fff3cd; /* Yellow background for sub-agent */
+            border-left-color: #f39c12; /* Orange border for sub-agent */
+        }
+        
+        .task-entry .entry.sidechain {
+            margin-left: 0; /* Override any margin for entries within task */
         }
         
         .entry-header {
@@ -408,6 +515,11 @@ func generateHTML(entries []*ProcessedEntry, outputFile string) error {
         
         .role.assistant {
             background: #27ae60;
+            color: white;
+        }
+        
+        .role.subagent {
+            background: #f39c12;
             color: white;
         }
         
@@ -516,15 +628,6 @@ func generateHTML(entries []*ProcessedEntry, outputFile string) error {
             margin-top: 10px;
         }
         
-        .task-label {
-            font-weight: bold;
-            color: #666;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
         pre {
             margin: 0;
         }
@@ -558,24 +661,35 @@ func generateHTML(entries []*ProcessedEntry, outputFile string) error {
             });
         });
         
-        // Toggle task children
-        document.querySelectorAll('.task-label').forEach(label => {
-            label.style.cursor = 'pointer';
-            label.addEventListener('click', () => {
-                const children = label.nextElementSibling;
-                if (children) {
-                    children.style.display = children.style.display === 'none' ? 'block' : 'none';
+        // Toggle result sections
+        document.querySelectorAll('.result-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const icon = header.querySelector('.result-expand-icon');
+                const content = header.nextElementSibling;
+                if (content) {
+                    const isHidden = content.style.display === 'none';
+                    content.style.display = isHidden ? 'block' : 'none';
+                    icon.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
                 }
             });
         });
+        
     </script>
 </body>
 </html>
 
 {{define "entry"}}
-<div class="entry {{.Type}}{{if .IsSidechain}} sidechain{{end}}" style="margin-left: {{mul .Depth 20}}px;">
+<div class="entry {{.Type}}{{if .IsSidechain}} sidechain{{end}}">
     <div class="entry-header">
-        <span class="role {{.Role}}">{{.Role}}</span>
+        {{if .IsSidechain}}
+            {{if eq .Role "user"}}
+            <span class="role assistant">Assistant</span>
+            {{else if eq .Role "assistant"}}
+            <span class="role subagent">Sub Agent</span>
+            {{end}}
+        {{else}}
+            <span class="role {{.Role}}">{{.Role}}</span>
+        {{end}}
         <span class="timestamp">{{.Timestamp}}</span>
         {{if .IsSidechain}}
         <span style="color: #9c27b0; font-size: 0.85em;">📎 Task</span>
@@ -599,35 +713,34 @@ func generateHTML(entries []*ProcessedEntry, outputFile string) error {
             </div>
             <div class="tool-details">
                 {{.Input}}
+                {{if .TaskEntries}}
+                <div style="margin-top: 15px;">
+                    {{range .TaskEntries}}
+                        <div class="task-entry">
+                            {{template "entry" .}}
+                        </div>
+                    {{end}}
+                </div>
+                {{end}}
+                {{if .Result}}
+                <div class="tool-result-section" style="margin-top: 15px;">
+                    <div class="result-header" style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 5px;">
+                        <svg class="result-expand-icon" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="transition: transform 0.2s;">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        <strong>Result</strong>
+                    </div>
+                    <div class="result-content" style="display: none; margin-top: 10px;">
+                        {{.Result.Content}}
+                    </div>
+                </div>
+                {{end}}
             </div>
         </div>
         {{end}}
     </div>
     {{end}}
     
-    {{if .Children}}
-    {{if .IsSidechain}}
-    <div class="task-children">
-        <div class="task-label">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-            </svg>
-            Task Execution Details
-        </div>
-        <div class="children">
-            {{range .Children}}
-                {{template "entry" .}}
-            {{end}}
-        </div>
-    </div>
-    {{else}}
-    <div class="children">
-        {{range .Children}}
-            {{template "entry" .}}
-        {{end}}
-    </div>
-    {{end}}
-    {{end}}
 </div>
 {{end}}`
 

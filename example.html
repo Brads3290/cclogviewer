@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Log Viewer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .entry {
+            margin-bottom: 20px;
+            border-left: 3px solid transparent;
+            padding-left: 15px;
+            transition: all 0.2s ease;
+        }
+        
+        .entry.user {
+            border-left-color: #3498db;
+            background: #f0f7ff;
+            padding: 10px 15px;
+            border-radius: 4px;
+        }
+        
+        .entry.assistant {
+            border-left-color: #27ae60;
+            background: #f0fff4;
+            padding: 10px 15px;
+            border-radius: 4px;
+        }
+        
+        .entry.sidechain {
+            margin-left: 40px;
+            opacity: 0.9;
+        }
+        
+        .entry-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .role {
+            font-weight: bold;
+            text-transform: capitalize;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.85em;
+        }
+        
+        .role.user {
+            background: #3498db;
+            color: white;
+        }
+        
+        .role.assistant {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .timestamp {
+            color: #999;
+            font-size: 0.85em;
+        }
+        
+        .content {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .tool-calls {
+            margin-top: 10px;
+        }
+        
+        .tool-call {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .tool-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .tool-header:hover {
+            background: #e9ecef;
+            margin: -10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .tool-name {
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .tool-description {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        
+        .expand-icon {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+        
+        .tool-details {
+            display: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .expanded .tool-details {
+            display: block;
+        }
+        
+        .tool-input {
+            background: #f1f3f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.85em;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        
+        .tool-result {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 5px;
+            white-space: pre-wrap;
+        }
+        
+        .tool-result.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef5350;
+        }
+        
+        .children {
+            margin-left: 20px;
+            margin-top: 15px;
+            padding-left: 20px;
+            border-left: 2px dashed #ddd;
+        }
+        
+        .task-children {
+            background: #fafafa;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .task-label {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        pre {
+            margin: 0;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Claude Code Conversation Log</h1>
+        
+            
+<div class="entry user" style="margin-left: 0px;">
+    <div class="entry-header">
+        <span class="role user">user</span>
+        <span class="timestamp">10:00:00</span>
+        
+    </div>
+    
+    <div class="content">Hello! Can you help me understand how to use the grep command?</div>
+    
+    
+    
+    
+    
+    <div class="children">
+        
+            
+<div class="entry assistant" style="margin-left: 20px;">
+    <div class="entry-header">
+        <span class="role assistant">assistant</span>
+        <span class="timestamp">10:00:01</span>
+        
+    </div>
+    
+    <div class="content">I&#39;ll help you understand the grep command. Let me show you some examples.</div>
+    
+    
+    
+    
+    
+    <div class="children">
+        
+            
+<div class="entry assistant" style="margin-left: 40px;">
+    <div class="entry-header">
+        <span class="role assistant">assistant</span>
+        <span class="timestamp">10:00:02</span>
+        
+    </div>
+    
+    <div class="content"></div>
+    
+    
+    <div class="tool-calls">
+        
+        <div class="tool-call">
+            <div class="tool-header">
+                <svg class="expand-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span class="tool-name">Bash</span>
+                
+                <span class="tool-description">Search for lines containing &#39;a&#39;</span>
+                
+            </div>
+            <div class="tool-details">
+                <pre class="tool-input">{
+  &#34;command&#34;: &#34;echo &#39;apple\nbanana\ncherry&#39; | grep &#39;a&#39;&#34;,
+  &#34;description&#34;: &#34;Search for lines containing &#39;a&#39;&#34;
+}</pre>
+            </div>
+        </div>
+        
+    </div>
+    
+    
+    
+    
+    <div class="children">
+        
+            
+<div class="entry user" style="margin-left: 60px;">
+    <div class="entry-header">
+        <span class="role user">user</span>
+        <span class="timestamp">10:00:03</span>
+        
+    </div>
+    
+    <div class="content"><div class="tool-result">apple<br>banana</div></div>
+    
+    
+    
+    
+    
+    <div class="children">
+        
+            
+<div class="entry assistant" style="margin-left: 80px;">
+    <div class="entry-header">
+        <span class="role assistant">assistant</span>
+        <span class="timestamp">10:00:04</span>
+        
+    </div>
+    
+    <div class="content">As you can see, grep found lines containing &#39;a&#39;. Now let me show you a Task example.</div>
+    
+    
+    <div class="tool-calls">
+        
+        <div class="tool-call">
+            <div class="tool-header">
+                <svg class="expand-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span class="tool-name">Task</span>
+                
+                <span class="tool-description">Find Python files</span>
+                
+            </div>
+            <div class="tool-details">
+                <pre class="tool-input">{
+  &#34;description&#34;: &#34;Find Python files&#34;,
+  &#34;prompt&#34;: &#34;Search for all Python files in the project&#34;,
+  &#34;subagent_type&#34;: &#34;general-purpose&#34;
+}</pre>
+            </div>
+        </div>
+        
+    </div>
+    
+    
+    
+    
+    <div class="children">
+        
+            
+<div class="entry user" style="margin-left: 100px;">
+    <div class="entry-header">
+        <span class="role user">user</span>
+        <span class="timestamp">10:00:10</span>
+        
+    </div>
+    
+    <div class="content"><div class="tool-result">Found 3 Python files in the project:<br>- main.py<br>- utils/helper.py<br>- tests/test_main.py</div></div>
+    
+    
+    
+    
+    
+    <div class="children">
+        
+            
+<div class="entry assistant" style="margin-left: 120px;">
+    <div class="entry-header">
+        <span class="role assistant">assistant</span>
+        <span class="timestamp">10:00:11</span>
+        
+    </div>
+    
+    <div class="content">Great! The Task found 3 Python files. This demonstrates how Tasks can run nested operations.</div>
+    
+    
+    
+    
+</div>
+
+        
+    </div>
+    
+    
+</div>
+
+        
+    </div>
+    
+    
+</div>
+
+        
+    </div>
+    
+    
+</div>
+
+        
+    </div>
+    
+    
+</div>
+
+        
+    </div>
+    
+    
+</div>
+
+        
+    </div>
+    
+    
+</div>
+
+        
+            
+<div class="entry user sidechain" style="margin-left: 0px;">
+    <div class="entry-header">
+        <span class="role user">user</span>
+        <span class="timestamp">10:00:05</span>
+        
+        <span style="color: #9c27b0; font-size: 0.85em;">📎 Task</span>
+        
+    </div>
+    
+    <div class="content">Search for all Python files in the project</div>
+    
+    
+    
+    
+    
+    <div class="task-children">
+        <div class="task-label">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+            Task Execution Details
+        </div>
+        <div class="children">
+            
+                
+<div class="entry assistant sidechain" style="margin-left: 20px;">
+    <div class="entry-header">
+        <span class="role assistant">assistant</span>
+        <span class="timestamp">10:00:06</span>
+        
+        <span style="color: #9c27b0; font-size: 0.85em;">📎 Task</span>
+        
+    </div>
+    
+    <div class="content">I&#39;ll search for Python files using the Glob tool.</div>
+    
+    
+    
+    
+    
+    <div class="task-children">
+        <div class="task-label">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+            Task Execution Details
+        </div>
+        <div class="children">
+            
+                
+<div class="entry assistant sidechain" style="margin-left: 40px;">
+    <div class="entry-header">
+        <span class="role assistant">assistant</span>
+        <span class="timestamp">10:00:07</span>
+        
+        <span style="color: #9c27b0; font-size: 0.85em;">📎 Task</span>
+        
+    </div>
+    
+    <div class="content"></div>
+    
+    
+    <div class="tool-calls">
+        
+        <div class="tool-call">
+            <div class="tool-header">
+                <svg class="expand-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span class="tool-name">Glob</span>
+                
+            </div>
+            <div class="tool-details">
+                <pre class="tool-input">{
+  &#34;pattern&#34;: &#34;**/*.py&#34;
+}</pre>
+            </div>
+        </div>
+        
+    </div>
+    
+    
+    
+    
+    <div class="task-children">
+        <div class="task-label">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+            Task Execution Details
+        </div>
+        <div class="children">
+            
+                
+<div class="entry user sidechain" style="margin-left: 60px;">
+    <div class="entry-header">
+        <span class="role user">user</span>
+        <span class="timestamp">10:00:08</span>
+        
+        <span style="color: #9c27b0; font-size: 0.85em;">📎 Task</span>
+        
+    </div>
+    
+    <div class="content"><div class="tool-result">main.py<br>utils/helper.py<br>tests/test_main.py</div></div>
+    
+    
+    
+    
+    
+    <div class="task-children">
+        <div class="task-label">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+            Task Execution Details
+        </div>
+        <div class="children">
+            
+                
+<div class="entry assistant sidechain" style="margin-left: 80px;">
+    <div class="entry-header">
+        <span class="role assistant">assistant</span>
+        <span class="timestamp">10:00:09</span>
+        
+        <span style="color: #9c27b0; font-size: 0.85em;">📎 Task</span>
+        
+    </div>
+    
+    <div class="content">Found 3 Python files:<br>- main.py<br>- utils/helper.py<br>- tests/test_main.py</div>
+    
+    
+    
+    
+</div>
+
+            
+        </div>
+    </div>
+    
+    
+</div>
+
+            
+        </div>
+    </div>
+    
+    
+</div>
+
+            
+        </div>
+    </div>
+    
+    
+</div>
+
+            
+        </div>
+    </div>
+    
+    
+</div>
+
+        
+    </div>
+    
+    <script>
+        
+        document.querySelectorAll('.tool-header').forEach(header => {
+            header.addEventListener('click', () => {
+                header.parentElement.classList.toggle('expanded');
+            });
+        });
+        
+        
+        document.querySelectorAll('.task-label').forEach(label => {
+            label.style.cursor = 'pointer';
+            label.addEventListener('click', () => {
+                const children = label.nextElementSibling;
+                if (children) {
+                    children.style.display = children.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
