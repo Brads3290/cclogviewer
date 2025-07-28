@@ -1,62 +1,57 @@
 # Claude Code Log Viewer
 
-A Go program that converts Claude Code JSONL log files into beautiful, interactive HTML for easy reading.
+Converts Claude Code JSONL log files into interactive HTML.
 
-## Features
+## Installation
 
-- 📖 Converts JSONL logs to clean HTML interface
-- 🎯 Hierarchical conversation display with proper nesting
-- 📎 Expandable Task tool calls showing nested execution
-- 🔧 Expandable tool call details with formatted inputs
-- 🎨 Color-coded messages (user/assistant)
-- ⏱️ Timestamps for each message
-- 🔍 Handles large log files efficiently
-- 🚀 Quick view mode - automatically opens in browser when output is omitted
+Requires Go 1.21 or later. Install Go from https://go.dev/
+
+```bash
+git clone https://github.com/Brads3290/cclogviewer
+cd cclogviewer
+make build
+```
+
+Or install directly:
+```bash
+go install github.com/Brads3290/cclogviewer/cmd/cclogviewer@latest
+```
 
 ## Usage
 
 ```bash
-# Quick view - generates temp file and opens automatically
-./cclogviewer -input /path/to/logfile.jsonl
+# Quick view (auto-opens in browser)
+cclogviewer -input session.jsonl
 
-# Specify output file
-./cclogviewer -input /path/to/logfile.jsonl -output conversation.html
+# Save to file
+cclogviewer -input session.jsonl -output conversation.html
 
-# Specify output and open in browser
-./cclogviewer -input /path/to/logfile.jsonl -output conversation.html -open
-```
-
-Or run directly with Go:
-
-```bash
-go run main.go -input /path/to/logfile.jsonl
+# Save and open
+cclogviewer -input session.jsonl -output conversation.html -open
 ```
 
 ## Arguments
 
-- `-input`: Path to the Claude Code JSONL log file (required)
-- `-output`: Path for the output HTML file (optional - if omitted, creates temp file and auto-opens)
-- `-open`: Force open the generated HTML file in browser (automatic when output is omitted)
+- `-input`: JSONL log file path (required)
+- `-output`: HTML output path (optional, auto-generates temp file if omitted)
+- `-open`: Open in browser (automatic without -output)
+- `-debug`: Enable debug logging
 
-## Examples
+## Features
+
+- Hierarchical conversation display
+- Expandable tool calls and results
+- Nested Task tool conversations
+- Token usage tracking
+- Syntax-highlighted code blocks
+- Timestamps and role indicators
+
+## Building from Source
 
 ```bash
-# Quick view - generates temp file and opens automatically
-./cclogviewer -input ~/.claude/projects/myproject/session.jsonl
-
-# Save to specific file without opening
-./cclogviewer -input session.jsonl -output myproject.html
-
-# Save to specific file and open
-./cclogviewer -input session.jsonl -output myproject.html -open
+make build           # Build binary
+make test           # Run tests
+make install        # Install to /usr/local/bin
 ```
 
-When output is omitted, files are saved to `/tmp/` with names like `cclog-session-20250727-143052.html`
-
-## Features in the HTML
-
-- Click on tool calls to expand/collapse their details
-- Task tool calls show nested conversations within
-- Error messages are highlighted in red
-- Code blocks are properly formatted
-- Sidechain (Task) conversations are visually distinguished
+See Makefile for all available commands.
