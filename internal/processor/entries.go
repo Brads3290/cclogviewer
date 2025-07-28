@@ -120,6 +120,19 @@ func ProcessEntries(entries []models.LogEntry) []*models.ProcessedEntry {
 				toolCall.Result.TotalTokens = toolCall.Result.InputTokens + 
 					toolCall.Result.CacheReadTokens + toolCall.Result.CacheCreationTokens
 			}
+			
+			// Calculate for Task entries (sidechain conversations)
+			for _, taskEntry := range toolCall.TaskEntries {
+				taskEntry.TotalTokens = taskEntry.InputTokens + taskEntry.CacheReadTokens + taskEntry.CacheCreationTokens
+				
+				// Also calculate for tool results within task entries
+				for _, taskToolCall := range taskEntry.ToolCalls {
+					if taskToolCall.Result != nil {
+						taskToolCall.Result.TotalTokens = taskToolCall.Result.InputTokens + 
+							taskToolCall.Result.CacheReadTokens + taskToolCall.Result.CacheCreationTokens
+					}
+				}
+			}
 		}
 	}
 

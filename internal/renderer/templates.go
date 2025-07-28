@@ -437,6 +437,34 @@ const htmlTemplate = `<!DOCTYPE html>
             background: #ffc107;
             color: #333;
         }
+        
+        /* Token details toggle styles */
+        .token-toggle {
+            cursor: pointer;
+            user-select: none;
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .token-toggle:hover {
+            color: #333;
+        }
+        
+        .token-details {
+            display: none;
+            color: #999;
+            font-size: 0.85em;
+            margin-left: 5px;
+        }
+        
+        .token-details.show {
+            display: inline;
+        }
+        
+        .token-expand-icon {
+            display: inline-block;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -473,6 +501,36 @@ const htmlTemplate = `<!DOCTYPE html>
             }
         });
         
+        // Global state for token details visibility
+        let tokenDetailsExpanded = false;
+        
+        // Handle token details toggle
+        document.addEventListener('click', (e) => {
+            const tokenToggle = e.target.closest('.token-toggle');
+            if (tokenToggle) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Toggle global state
+                tokenDetailsExpanded = !tokenDetailsExpanded;
+                
+                // Update all token toggles
+                const allTokenToggles = document.querySelectorAll('.token-toggle');
+                allTokenToggles.forEach(toggle => {
+                    const details = toggle.querySelector('.token-details');
+                    const icon = toggle.querySelector('.token-expand-icon');
+                    
+                    if (tokenDetailsExpanded) {
+                        details.classList.add('show');
+                        icon.textContent = '[-]';
+                    } else {
+                        details.classList.remove('show');
+                        icon.textContent = '[+]';
+                    }
+                });
+            }
+        });
+        
     </script>
 </body>
 </html>
@@ -493,21 +551,29 @@ const htmlTemplate = `<!DOCTYPE html>
         {{if .IsSidechain}}
         <span style="color: #9c27b0; font-size: 0.85em;">📎 Task</span>
         {{end}}
-        <span style="color: #666; font-size: 0.85em;">
-            {{if or .InputTokens .OutputTokens .CacheReadTokens .CacheCreationTokens}}
-                {{if .InputTokens}}{{formatNumber .InputTokens}} input{{end}}
-                {{if and .InputTokens (or .OutputTokens .CacheReadTokens .CacheCreationTokens)}} | {{end}}
-                {{if and (eq .Role "assistant") .OutputTokens}}~{{formatNumber .OutputTokens}} output{{end}}
-                {{if and (eq .Role "user") .OutputTokens}}~{{formatNumber .OutputTokens}} tokens{{end}}
-                {{if and .OutputTokens (or .CacheReadTokens .CacheCreationTokens)}} | {{end}}
-                {{if .CacheReadTokens}}{{formatNumber .CacheReadTokens}} cache read{{end}}
-                {{if and .CacheReadTokens .CacheCreationTokens}} | {{end}}
-                {{if .CacheCreationTokens}}{{formatNumber .CacheCreationTokens}} cache write{{end}}
-                {{if .TotalTokens}} | Conversation size: {{formatNumber .TotalTokens}}{{end}}
-            {{else if .TokenCount}}
-                ~{{formatNumber .TokenCount}} tokens{{if .TotalTokens}} | Conversation size: {{formatNumber .TotalTokens}}{{end}}
-            {{end}}
+        {{if eq .Role "assistant"}}
+        <span class="token-toggle">
+            {{if .TotalTokens}}Conversation size: {{formatNumber .TotalTokens}} | {{end}}
+            <span class="token-expand-icon">[+]</span>
+            <span class="token-details">
+                {{if or .InputTokens .OutputTokens .CacheReadTokens .CacheCreationTokens}}
+                    {{if .InputTokens}}{{formatNumber .InputTokens}} input{{end}}
+                    {{if and .InputTokens (or .OutputTokens .CacheReadTokens .CacheCreationTokens)}} | {{end}}
+                    {{if .OutputTokens}}~{{formatNumber .OutputTokens}} output{{end}}
+                    {{if and .OutputTokens (or .CacheReadTokens .CacheCreationTokens)}} | {{end}}
+                    {{if .CacheReadTokens}}{{formatNumber .CacheReadTokens}} cache read{{end}}
+                    {{if and .CacheReadTokens .CacheCreationTokens}} | {{end}}
+                    {{if .CacheCreationTokens}}{{formatNumber .CacheCreationTokens}} cache write{{end}}
+                {{else if .TokenCount}}
+                    ~{{formatNumber .TokenCount}} tokens
+                {{end}}
+            </span>
         </span>
+        {{else if eq .Role "user"}}
+        <span style="color: #666; font-size: 0.85em;">
+            {{if .OutputTokens}}~{{formatNumber .OutputTokens}} tokens{{end}}
+        </span>
+        {{end}}
     </div>
     
     <div class="content">{{.Content}}</div>
