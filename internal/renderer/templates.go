@@ -402,6 +402,21 @@ const htmlTemplate = `<!DOCTYPE html>
         {{if .IsSidechain}}
         <span style="color: #9c27b0; font-size: 0.85em;">📎 Task</span>
         {{end}}
+        <span style="color: #666; font-size: 0.85em;">
+            {{if or .InputTokens .OutputTokens .CacheReadTokens .CacheCreationTokens}}
+                {{if .InputTokens}}{{formatNumber .InputTokens}} input{{end}}
+                {{if and .InputTokens (or .OutputTokens .CacheReadTokens .CacheCreationTokens)}} | {{end}}
+                {{if and (eq .Role "assistant") .OutputTokens}}~{{formatNumber .OutputTokens}} output{{end}}
+                {{if and (eq .Role "user") .OutputTokens}}~{{formatNumber .OutputTokens}} tokens{{end}}
+                {{if and .OutputTokens (or .CacheReadTokens .CacheCreationTokens)}} | {{end}}
+                {{if .CacheReadTokens}}{{formatNumber .CacheReadTokens}} cache read{{end}}
+                {{if and .CacheReadTokens .CacheCreationTokens}} | {{end}}
+                {{if .CacheCreationTokens}}{{formatNumber .CacheCreationTokens}} cache write{{end}}
+                {{if .TotalTokens}} | Conversation size: {{formatNumber .TotalTokens}}{{end}}
+            {{else if .TokenCount}}
+                ~{{formatNumber .TokenCount}} tokens{{if .TotalTokens}} | Conversation size: {{formatNumber .TotalTokens}}{{end}}
+            {{end}}
+        </span>
     </div>
     
     <div class="content">{{.Content}}</div>

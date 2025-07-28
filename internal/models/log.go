@@ -25,18 +25,24 @@ type LogEntry struct {
 
 // ProcessedEntry represents a processed log entry for display
 type ProcessedEntry struct {
-	UUID         string
-	ParentUUID   string
-	IsSidechain  bool
-	Type         string
-	Timestamp    string
-	RawTimestamp string // Keep the raw timestamp for comparisons
-	Role         string
-	Content      template.HTML
-	ToolCalls    []ToolCall
-	IsToolResult bool
-	IsError      bool
-	Children     []*ProcessedEntry
-	Depth        int
-	ToolResultID string // For matching tool results to tool calls
+	UUID                     string
+	ParentUUID               string
+	IsSidechain              bool
+	Type                     string
+	Timestamp                string
+	RawTimestamp             string // Keep the raw timestamp for comparisons
+	Role                     string
+	Content                  template.HTML
+	ToolCalls                []ToolCall
+	IsToolResult             bool
+	IsError                  bool
+	Children                 []*ProcessedEntry
+	Depth                    int
+	ToolResultID             string // For matching tool results to tool calls
+	TokenCount               int    // Tokens in this message (output tokens for assistant, estimated for user)
+	TotalTokens              int    // Running total of all tokens up to this message
+	InputTokens              int    // Input tokens from usage
+	OutputTokens             int    // Output tokens from usage
+	CacheReadTokens          int    // Cache read tokens from usage
+	CacheCreationTokens      int    // Cache creation tokens from usage
 }

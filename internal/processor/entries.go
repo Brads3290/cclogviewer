@@ -109,7 +109,19 @@ func ProcessEntries(entries []models.LogEntry) []*models.ProcessedEntry {
 		}
 	}
 
-	// No need to calculate depths for chronological display
+	// Calculate conversation size for each entry (input + cache read + cache write)
+	for _, entry := range rootEntries {
+		// Conversation size is the context sent to the model (excluding output)
+		entry.TotalTokens = entry.InputTokens + entry.CacheReadTokens + entry.CacheCreationTokens
+		
+		// Also calculate for tool results
+		for _, toolCall := range entry.ToolCalls {
+			if toolCall.Result != nil {
+				toolCall.Result.TotalTokens = toolCall.Result.InputTokens + 
+					toolCall.Result.CacheReadTokens + toolCall.Result.CacheCreationTokens
+			}
+		}
+	}
 
 	return rootEntries
 }
@@ -150,6 +162,34 @@ func processEntry(entry models.LogEntry) *models.ProcessedEntry {
 				}
 			}
 		}
+		
+		// Extract token counts from usage field if available
+		if usage, ok := msg["usage"].(map[string]interface{}); ok {
+			// Extract all token types
+			if inputTokens, ok := usage["input_tokens"].(float64); ok {
+				processed.InputTokens = int(inputTokens)
+			}
+			// Always estimate output tokens from content for accuracy
+			processed.OutputTokens = EstimateTokens(string(processed.Content))
+			processed.TokenCount = processed.OutputTokens
+			
+			if cacheReadTokens, ok := usage["cache_read_input_tokens"].(float64); ok {
+				processed.CacheReadTokens = int(cacheReadTokens)
+			}
+			if cacheCreationTokens, ok := usage["cache_creation_input_tokens"].(float64); ok {
+				processed.CacheCreationTokens = int(cacheCreationTokens)
+			}
+		} else {
+			// Fall back to estimation for messages without usage data
+			processed.TokenCount = EstimateTokens(string(processed.Content))
+			// For user messages, the estimated tokens are output tokens
+			if processed.Role == "user" {
+				processed.OutputTokens = processed.TokenCount
+			}
+		}
+	} else {
+		// If we can't parse the message, estimate tokens from content
+		processed.TokenCount = EstimateTokens(string(processed.Content))
 	}
 
 	return processed
