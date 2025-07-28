@@ -346,6 +346,97 @@ const htmlTemplate = `<!DOCTYPE html>
         .multi-edit .edit-item {
             padding: 10px 15px;
         }
+        
+        /* Compact todo list styles */
+        .todo-compact {
+            margin-top: 10px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 0.85em;
+        }
+        
+        .todo-compact-summary {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+        
+        .todo-compact-title {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .todo-stat {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+        
+        .todo-stat.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .todo-stat.in-progress {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .todo-stat.pending {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .todo-compact-items {
+            margin-left: 20px;
+        }
+        
+        .todo-compact-item {
+            padding: 3px 0;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .todo-compact-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+        
+        .todo-icon {
+            width: 16px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .todo-priority-badge {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            line-height: 14px;
+            text-align: center;
+            border-radius: 2px;
+            font-size: 0.7em;
+            font-weight: bold;
+            margin-left: 4px;
+        }
+        
+        .todo-priority-badge.high {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .todo-priority-badge.medium {
+            background: #ffc107;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -460,6 +551,9 @@ const htmlTemplate = `<!DOCTYPE html>
                 {{end}}
             </div>
         </div>
+        {{if .CompactView}}
+        {{.CompactView}}
+        {{end}}
         {{end}}
     </div>
     {{end}}

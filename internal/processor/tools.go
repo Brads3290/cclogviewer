@@ -29,6 +29,11 @@ func ProcessToolUse(toolUse map[string]interface{}) models.ToolCall {
 			inputJSON, _ := json.MarshalIndent(input, "", "  ")
 			tool.Input = template.HTML(fmt.Sprintf(`<pre class="tool-input">%s</pre>`, html.EscapeString(string(inputJSON))))
 		}
+		
+		// Generate compact view for TodoWrite
+		if tool.Name == "TodoWrite" {
+			tool.CompactView = formatTodoWriteCompact(input)
+		}
 	}
 
 	return tool
@@ -286,3 +291,95 @@ func formatMultiEditToolInput(input map[string]interface{}) template.HTML {
 	multiEditHTML.WriteString(`</div>`)
 	return template.HTML(multiEditHTML.String())
 }
+
+// formatTodoWriteCompact creates a compact display for TodoWrite tool
+func formatTodoWriteCompact(input map[string]interface{}) template.HTML {
+	todos, ok := input["todos"].([]interface{})
+	if !ok {
+		return template.HTML("")
+	}
+
+	// Build compact todo display
+	var todoHTML strings.Builder
+	todoHTML.WriteString(`<div class="todo-compact">`)
+	
+	// Count tasks by status
+	pending, inProgress, completed := 0, 0, 0
+	for _, todoInterface := range todos {
+		todo, ok := todoInterface.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		status := GetStringValue(todo, "status")
+		switch status {
+		case "pending":
+			pending++
+		case "in_progress":
+			inProgress++
+		case "completed":
+			completed++
+		}
+	}
+	
+	// Add summary bar
+	total := pending + inProgress + completed
+	if total > 0 {
+		todoHTML.WriteString(`<div class="todo-compact-summary">`)
+		todoHTML.WriteString(`<span class="todo-compact-title">📋 Todo List</span>`)
+		
+		if completed > 0 {
+			todoHTML.WriteString(fmt.Sprintf(`<span class="todo-stat completed">✓ %d</span>`, completed))
+		}
+		if inProgress > 0 {
+			todoHTML.WriteString(fmt.Sprintf(`<span class="todo-stat in-progress">⏳ %d</span>`, inProgress))
+		}
+		if pending > 0 {
+			todoHTML.WriteString(fmt.Sprintf(`<span class="todo-stat pending">○ %d</span>`, pending))
+		}
+		todoHTML.WriteString(`</div>`)
+		
+		// Show todo items
+		todoHTML.WriteString(`<div class="todo-compact-items">`)
+		for _, todoInterface := range todos {
+			todo, ok := todoInterface.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			
+			content := GetStringValue(todo, "content")
+			status := GetStringValue(todo, "status")
+			priority := GetStringValue(todo, "priority")
+			
+			// Determine status icon
+			var statusIcon string
+			var statusClass string
+			switch status {
+			case "completed":
+				statusIcon = "✓"
+				statusClass = "completed"
+			case "in_progress":
+				statusIcon = "⏳"
+				statusClass = "in-progress"
+			case "pending":
+				statusIcon = "○"
+				statusClass = "pending"
+			}
+			
+			// Priority badge
+			var priorityBadge string
+			if priority == "high" {
+				priorityBadge = ` <span class="todo-priority-badge high">H</span>`
+			} else if priority == "medium" {
+				priorityBadge = ` <span class="todo-priority-badge medium">M</span>`
+			}
+			
+			todoHTML.WriteString(fmt.Sprintf(`<div class="todo-compact-item %s"><span class="todo-icon">%s</span> %s%s</div>`, 
+				statusClass, statusIcon, html.EscapeString(content), priorityBadge))
+		}
+		todoHTML.WriteString(`</div>`)
+	}
+	
+	todoHTML.WriteString(`</div>`)
+	return template.HTML(todoHTML.String())
+}
+
