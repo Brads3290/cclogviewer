@@ -1,7 +1,7 @@
 package processor
 
 import (
-	"cclogviewer/internal/models"
+	"github.com/Brads3290/cclogviewer/internal/models"
 	"encoding/json"
 	"fmt"
 	"html"

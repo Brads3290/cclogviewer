@@ -1,11 +1,11 @@
 package main
 
 import (
-	"cclogviewer/internal/browser"
-	"cclogviewer/internal/debug"
-	"cclogviewer/internal/parser"
-	"cclogviewer/internal/processor"
-	"cclogviewer/internal/renderer"
+	"github.com/Brads3290/cclogviewer/internal/browser"
+	"github.com/Brads3290/cclogviewer/internal/debug"
+	"github.com/Brads3290/cclogviewer/internal/parser"
+	"github.com/Brads3290/cclogviewer/internal/processor"
+	"github.com/Brads3290/cclogviewer/internal/renderer"
 	"flag"
 	"fmt"
 	"log"

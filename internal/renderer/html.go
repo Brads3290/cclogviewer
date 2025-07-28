@@ -1,7 +1,7 @@
 package renderer
 
 import (
-	"cclogviewer/internal/models"
+	"github.com/Brads3290/cclogviewer/internal/models"
 	"fmt"
 	"html/template"
 	"os"

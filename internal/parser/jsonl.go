@@ -2,8 +2,8 @@ package parser
 
 import (
 	"bufio"
-	"cclogviewer/internal/debug"
-	"cclogviewer/internal/models"
+	"github.com/Brads3290/cclogviewer/internal/debug"
+	"github.com/Brads3290/cclogviewer/internal/models"
 	"encoding/json"
 	"log"
 	"os"
