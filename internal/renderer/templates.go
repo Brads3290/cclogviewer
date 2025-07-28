@@ -75,6 +75,20 @@ const htmlTemplate = `<!DOCTYPE html>
             margin-left: 0; /* Override any margin for entries within task */
         }
         
+        /* Ensure tool details in sub-agent conversations start collapsed */
+        .task-entry .tool-details {
+            display: none !important;
+        }
+        
+        .task-entry .tool-call.expanded .tool-details {
+            display: block !important;
+        }
+        
+        /* Fix chevron rotation in sub-agent conversations */
+        .task-entry .expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+        
         .entry-header {
             display: flex;
             align-items: center;
@@ -227,6 +241,91 @@ const htmlTemplate = `<!DOCTYPE html>
             background: none;
             padding: 0;
         }
+        
+        /* Diff view styles */
+        .edit-diff {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        .diff-header {
+            background: #e9ecef;
+            padding: 10px 15px;
+            font-weight: bold;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .diff-header .file-path {
+            color: #0056b3;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+        
+        .diff-header .replace-all {
+            background: #6c757d;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.75em;
+            margin-left: 10px;
+        }
+        
+        .diff-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .diff-section {
+            flex: 1;
+        }
+        
+        .diff-section.removed {
+            background: #ffebee;
+        }
+        
+        .diff-section.added {
+            background: #e8f5e9;
+        }
+        
+        .diff-section-header {
+            padding: 8px 15px;
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+        
+        .diff-section.removed .diff-section-header {
+            color: #c62828;
+            background: #ffcdd2;
+        }
+        
+        .diff-section.added .diff-section-header {
+            color: #2e7d32;
+            background: #c8e6c9;
+        }
+        
+        .diff-code {
+            margin: 0;
+            padding: 10px 15px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85em;
+            line-height: 1.5;
+            white-space: pre;
+        }
+        
+        .diff-code .line-number {
+            color: #999;
+            user-select: none;
+            margin-right: 10px;
+            display: inline-block;
+            text-align: right;
+            width: 30px;
+        }
     </style>
 </head>
 <body>
@@ -238,24 +337,29 @@ const htmlTemplate = `<!DOCTYPE html>
     </div>
     
     <script>
-        // Toggle tool call details
-        document.querySelectorAll('.tool-header').forEach(header => {
-            header.addEventListener('click', () => {
-                header.parentElement.classList.toggle('expanded');
-            });
-        });
-        
-        // Toggle result sections
-        document.querySelectorAll('.result-header').forEach(header => {
-            header.addEventListener('click', () => {
-                const icon = header.querySelector('.result-expand-icon');
-                const content = header.nextElementSibling;
+        // Use event delegation for tool call toggling
+        document.addEventListener('click', (e) => {
+            // Handle tool header clicks
+            const toolHeader = e.target.closest('.tool-header');
+            if (toolHeader) {
+                e.preventDefault();
+                e.stopPropagation();
+                toolHeader.parentElement.classList.toggle('expanded');
+            }
+            
+            // Handle result header clicks
+            const resultHeader = e.target.closest('.result-header');
+            if (resultHeader) {
+                e.preventDefault();
+                e.stopPropagation();
+                const icon = resultHeader.querySelector('.result-expand-icon');
+                const content = resultHeader.nextElementSibling;
                 if (content) {
                     const isHidden = content.style.display === 'none';
                     content.style.display = isHidden ? 'block' : 'none';
                     icon.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
                 }
-            });
+            }
         });
         
     </script>
