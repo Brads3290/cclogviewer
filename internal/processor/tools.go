@@ -18,6 +18,7 @@ func ProcessToolUse(toolUse map[string]interface{}) models.ToolCall {
 
 	if input, ok := toolUse["input"].(map[string]interface{}); ok {
 		tool.Description = GetStringValue(input, "description")
+		tool.RawInput = input // Store raw input for later use
 		
 		// Special handling for Edit and MultiEdit tools
 		if tool.Name == "Edit" {
@@ -27,7 +28,7 @@ func ProcessToolUse(toolUse map[string]interface{}) models.ToolCall {
 		} else {
 			// Format the input as JSON
 			inputJSON, _ := json.MarshalIndent(input, "", "  ")
-			tool.Input = template.HTML(fmt.Sprintf(`<pre class="tool-input">%s</pre>`, html.EscapeString(string(inputJSON))))
+			tool.Input = template.HTML(fmt.Sprintf(`<pre>%s</pre>`, html.EscapeString(string(inputJSON))))
 		}
 		
 		// Generate compact view for TodoWrite

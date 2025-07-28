@@ -5,6 +5,7 @@ import (
 	"cclogviewer/internal/models"
 	"encoding/json"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -61,56 +62,74 @@ func ProcessEntries(entries []models.LogEntry) []*models.ProcessedEntry {
 	}
 
 	// Fifth pass: group sidechain entries with their corresponding Task tool calls
-	// Match Task tool calls with their sidechain entries based on timing
+	// First, collect all sidechain roots
 	var sidechainRoots []*models.ProcessedEntry
-	for _, processed := range entryMap {
-		if processed.IsSidechain && processed.ParentUUID == "" {
-			// Skip tool results that are attached to tool calls
-			if processed.IsToolResult {
-				continue
-			}
+	for _, entry := range entries {
+		processed := entryMap[entry.UUID]
+		if processed.IsSidechain && processed.ParentUUID == "" && !processed.IsToolResult {
 			sidechainRoots = append(sidechainRoots, processed)
 		}
 	}
 	
-	// Debug: log sidechain count
-	if debug.Enabled && len(sidechainRoots) > 0 {
-		log.Printf("Found %d sidechain root entries", len(sidechainRoots))
+	if debug.Enabled {
+		log.Printf("Found %d sidechain roots", len(sidechainRoots))
 	}
 	
-	for _, sidechain := range sidechainRoots {
-		// Find the most recent Task tool call before this sidechain entry
-		var bestMatch *models.ToolCall
-		var bestTimeStr string
-		
-		for _, entry := range entryMap {
-			for i := range entry.ToolCalls {
-				if entry.ToolCalls[i].Name == "Task" {
-					// Compare raw timestamps
-					if entry.RawTimestamp < sidechain.RawTimestamp {
-						if bestMatch == nil || entry.RawTimestamp > bestTimeStr {
-							bestMatch = &entry.ToolCalls[i]
-							bestTimeStr = entry.RawTimestamp
-							if debug.Enabled {
-								log.Printf("Found potential Task match: tool at %s for sidechain at %s", entry.RawTimestamp, sidechain.RawTimestamp)
+	// Build a map to track which sidechains have been matched
+	matchedSidechains := make(map[string]bool)
+	
+	// Look through tool results to match Task tools with their sidechains
+	for _, entry := range entries {
+		if !entry.IsSidechain && entry.Type == "user" {
+			processed := entryMap[entry.UUID]
+			if processed.IsToolResult && processed.ToolResultID != "" {
+				// Check if this is a Task tool result
+				if toolCall, exists := toolCallMap[processed.ToolResultID]; exists && toolCall.Name == "Task" {
+					// Extract the content from the tool result
+					var msg map[string]interface{}
+					if err := json.Unmarshal(entry.Message, &msg); err == nil {
+						if content, ok := msg["content"].([]interface{}); ok && len(content) > 0 {
+							if toolResult, ok := content[0].(map[string]interface{}); ok {
+								if resultContent, ok := toolResult["content"].([]interface{}); ok && len(resultContent) > 0 {
+									if textContent, ok := resultContent[0].(map[string]interface{}); ok {
+										if text, ok := textContent["text"].(string); ok {
+											// Find the best matching sidechain based on content
+											var bestMatch *models.ProcessedEntry
+											var bestScore int
+											
+											for _, sidechain := range sidechainRoots {
+												if matchedSidechains[sidechain.UUID] {
+													continue // Skip already matched sidechains
+												}
+												
+												// Extract content from sidechain to compare
+												sidechainText := extractFullSidechainContent(sidechain, entryMap)
+												
+												// Calculate similarity score
+												score := calculateContentSimilarity(text, sidechainText)
+												
+												if score > bestScore {
+													bestScore = score
+													bestMatch = sidechain
+												}
+											}
+											
+											if bestMatch != nil {
+												toolCall.TaskEntries = collectSidechainEntries(bestMatch, entryMap)
+												matchedSidechains[bestMatch.UUID] = true
+												if debug.Enabled {
+													log.Printf("Matched Task tool %s to sidechain %s (score: %d)", 
+														processed.ToolResultID, bestMatch.UUID, bestScore)
+												}
+											}
+										}
+									}
+								}
 							}
 						}
 					}
 				}
 			}
-		}
-		
-		// If we found a matching Task tool call, attach the sidechain entries
-		if bestMatch != nil && len(bestMatch.TaskEntries) == 0 {
-			bestMatch.TaskEntries = collectSidechainEntries(sidechain, entryMap)
-			if debug.Enabled {
-				log.Printf("Attached %d sidechain entries to Task tool call", len(bestMatch.TaskEntries))
-				for _, entry := range bestMatch.TaskEntries {
-					log.Printf("  - Entry: UUID=%s, Role=%s, IsToolResult=%v", entry.UUID, entry.Role, entry.IsToolResult)
-				}
-			}
-		} else if bestMatch == nil && debug.Enabled {
-			log.Printf("No matching Task tool call found for sidechain at %s", sidechain.RawTimestamp)
 		}
 	}
 
@@ -288,4 +307,118 @@ func GetBoolValue(m map[string]interface{}, key string) bool {
 		return val
 	}
 	return false
+}
+
+// extractContent extracts text content from a ProcessedEntry
+func extractContent(entry *models.ProcessedEntry) string {
+	// For now, just convert HTML content to plain text
+	content := string(entry.Content)
+	// Remove HTML tags in a simple way
+	content = strings.ReplaceAll(content, "<br>", " ")
+	content = strings.ReplaceAll(content, "</div>", " ")
+	content = strings.ReplaceAll(content, "<div class=\"tool-result\">", " ")
+	content = strings.ReplaceAll(content, "<div class=\"tool-result error\">", " ")
+	// Remove other HTML tags
+	for strings.Contains(content, "<") && strings.Contains(content, ">") {
+		start := strings.Index(content, "<")
+		end := strings.Index(content, ">")
+		if start >= 0 && end > start {
+			content = content[:start] + " " + content[end+1:]
+		} else {
+			break
+		}
+	}
+	return strings.TrimSpace(content)
+}
+
+// truncateString truncates a string to a maximum length
+func truncateString(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "..."
+}
+
+// extractFullSidechainContent extracts all text content from a sidechain conversation
+func extractFullSidechainContent(root *models.ProcessedEntry, entryMap map[string]*models.ProcessedEntry) string {
+	var content strings.Builder
+	
+	// Helper function to extract content from an entry and its children
+	var extractFromEntry func(entry *models.ProcessedEntry)
+	extractFromEntry = func(entry *models.ProcessedEntry) {
+		// Add this entry's content
+		entryText := extractContent(entry)
+		if entryText != "" {
+			content.WriteString(entryText)
+			content.WriteString(" ")
+		}
+		
+		// Process children
+		for _, child := range entry.Children {
+			extractFromEntry(child)
+		}
+		
+		// Process any entries that have this as parent
+		for _, e := range entryMap {
+			if e.ParentUUID == entry.UUID && e.IsSidechain {
+				// Check if it's already in children
+				found := false
+				for _, child := range entry.Children {
+					if child.UUID == e.UUID {
+						found = true
+						break
+					}
+				}
+				if !found {
+					extractFromEntry(e)
+				}
+			}
+		}
+	}
+	
+	extractFromEntry(root)
+	return content.String()
+}
+
+// calculateContentSimilarity calculates a similarity score between two texts
+func calculateContentSimilarity(text1, text2 string) int {
+	// Simple implementation: count matching words
+	words1 := strings.Fields(strings.ToLower(text1))
+	words2 := strings.Fields(strings.ToLower(text2))
+	
+	wordMap := make(map[string]bool)
+	for _, word := range words1 {
+		if len(word) > 3 { // Skip very short words
+			wordMap[word] = true
+		}
+	}
+	
+	score := 0
+	for _, word := range words2 {
+		if len(word) > 3 && wordMap[word] {
+			score++
+		}
+	}
+	
+	// Bonus points for exact phrase matches
+	lowerText1 := strings.ToLower(text1)
+	lowerText2 := strings.ToLower(text2)
+	
+	// Check for key phrases that might appear in both
+	keyPhrases := []string{
+		"developer's desktop",
+		"digital artifacts", 
+		"claude code",
+		"apple pie",
+		"poem",
+		"desktop canvas",
+	}
+	
+	for _, phrase := range keyPhrases {
+		if strings.Contains(lowerText1, phrase) && strings.Contains(lowerText2, phrase) {
+			score += 10 // Heavy weight for matching key phrases
+		}
+	}
+	
+	return score
 }

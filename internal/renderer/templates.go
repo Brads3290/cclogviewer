@@ -196,6 +196,12 @@ const htmlTemplate = `<!DOCTYPE html>
             overflow-x: auto;
             font-size: 0.85em;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            line-height: 1.4;
+        }
+        
+        .tool-input pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
         
         .tool-result {
@@ -228,6 +234,9 @@ const htmlTemplate = `<!DOCTYPE html>
         
         pre {
             margin: 0;
+            padding: 0;
+            background: transparent;
+            border: none;
         }
         
         code {
@@ -284,11 +293,11 @@ const htmlTemplate = `<!DOCTYPE html>
         
         .diff-code {
             margin: 0;
-            padding: 0;
+            padding: 10px;
             overflow-x: auto;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             font-size: 0.85em;
-            line-height: 0;
+            line-height: 1.4;
             white-space: pre;
             background: #fafafa;
         }
