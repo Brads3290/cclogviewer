@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"cclogviewer/internal/debug"
 	"cclogviewer/internal/models"
 	"encoding/json"
 	"log"
@@ -73,7 +74,7 @@ func ProcessEntries(entries []models.LogEntry) []*models.ProcessedEntry {
 	}
 	
 	// Debug: log sidechain count
-	if len(sidechainRoots) > 0 {
+	if debug.Enabled && len(sidechainRoots) > 0 {
 		log.Printf("Found %d sidechain root entries", len(sidechainRoots))
 	}
 	
@@ -90,7 +91,9 @@ func ProcessEntries(entries []models.LogEntry) []*models.ProcessedEntry {
 						if bestMatch == nil || entry.RawTimestamp > bestTimeStr {
 							bestMatch = &entry.ToolCalls[i]
 							bestTimeStr = entry.RawTimestamp
-							log.Printf("Found potential Task match: tool at %s for sidechain at %s", entry.RawTimestamp, sidechain.RawTimestamp)
+							if debug.Enabled {
+								log.Printf("Found potential Task match: tool at %s for sidechain at %s", entry.RawTimestamp, sidechain.RawTimestamp)
+							}
 						}
 					}
 				}
@@ -100,11 +103,13 @@ func ProcessEntries(entries []models.LogEntry) []*models.ProcessedEntry {
 		// If we found a matching Task tool call, attach the sidechain entries
 		if bestMatch != nil && len(bestMatch.TaskEntries) == 0 {
 			bestMatch.TaskEntries = collectSidechainEntries(sidechain, entryMap)
-			log.Printf("Attached %d sidechain entries to Task tool call", len(bestMatch.TaskEntries))
-			for _, entry := range bestMatch.TaskEntries {
-				log.Printf("  - Entry: UUID=%s, Role=%s, IsToolResult=%v", entry.UUID, entry.Role, entry.IsToolResult)
+			if debug.Enabled {
+				log.Printf("Attached %d sidechain entries to Task tool call", len(bestMatch.TaskEntries))
+				for _, entry := range bestMatch.TaskEntries {
+					log.Printf("  - Entry: UUID=%s, Role=%s, IsToolResult=%v", entry.UUID, entry.Role, entry.IsToolResult)
+				}
 			}
-		} else if bestMatch == nil {
+		} else if bestMatch == nil && debug.Enabled {
 			log.Printf("No matching Task tool call found for sidechain at %s", sidechain.RawTimestamp)
 		}
 	}

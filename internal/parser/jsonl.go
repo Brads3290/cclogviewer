@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bufio"
+	"cclogviewer/internal/debug"
 	"cclogviewer/internal/models"
 	"encoding/json"
 	"log"
@@ -27,7 +28,9 @@ func ReadJSONLFile(filename string) ([]models.LogEntry, error) {
 		lineNum++
 		var entry models.LogEntry
 		if err := json.Unmarshal(scanner.Bytes(), &entry); err != nil {
-			log.Printf("Error parsing line %d: %v", lineNum, err)
+			if debug.Enabled {
+				log.Printf("Error parsing line %d: %v", lineNum, err)
+			}
 			continue
 		}
 		entries = append(entries, entry)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"cclogviewer/internal/browser"
+	"cclogviewer/internal/debug"
 	"cclogviewer/internal/parser"
 	"cclogviewer/internal/processor"
 	"cclogviewer/internal/renderer"
@@ -20,6 +21,7 @@ func main() {
 	flag.StringVar(&inputFile, "input", "", "Input JSONL file path")
 	flag.StringVar(&outputFile, "output", "", "Output HTML file path (optional)")
 	flag.BoolVar(&openBrowser, "open", false, "Open the generated HTML file in browser")
+	flag.BoolVar(&debug.Enabled, "debug", false, "Enable debug logging")
 	flag.Parse()
 
 	if inputFile == "" {
