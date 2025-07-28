@@ -275,47 +275,44 @@ const htmlTemplate = `<!DOCTYPE html>
         }
         
         .diff-content {
-            display: flex;
-            flex-direction: column;
-            gap: 0;
+            background: #fafafa;
         }
         
-        .diff-section {
-            flex: 1;
-        }
-        
-        .diff-section.removed {
-            background: #ffebee;
-        }
-        
-        .diff-section.added {
-            background: #e8f5e9;
-        }
-        
-        .diff-section-header {
-            padding: 8px 15px;
-            font-weight: bold;
-            font-size: 0.85em;
-        }
-        
-        .diff-section.removed .diff-section-header {
-            color: #c62828;
-            background: #ffcdd2;
-        }
-        
-        .diff-section.added .diff-section-header {
-            color: #2e7d32;
-            background: #c8e6c9;
+        .diff-content.unified {
+            padding: 0;
         }
         
         .diff-code {
             margin: 0;
-            padding: 10px 15px;
+            padding: 0;
             overflow-x: auto;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             font-size: 0.85em;
-            line-height: 1.5;
+            line-height: 0;
             white-space: pre;
+            background: #fafafa;
+        }
+        
+        .diff-line {
+            display: block;
+            padding: 0 15px;
+            margin: 0;
+            line-height: 1.4;
+        }
+        
+        .diff-line.line-removed {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .diff-line.line-added {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .diff-line.line-unchanged {
+            background: transparent;
+            color: #666;
         }
         
         .diff-code .line-number {
@@ -325,6 +322,29 @@ const htmlTemplate = `<!DOCTYPE html>
             display: inline-block;
             text-align: right;
             width: 30px;
+        }
+        
+        .diff-code .line-prefix {
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        /* Multi-edit styles */
+        .multi-edit {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        .multi-edit .diff-header {
+            margin-bottom: 0;
+        }
+        
+        .multi-edit .edit-item {
+            padding: 10px 15px;
         }
     </style>
 </head>
