@@ -15,4 +15,5 @@ type ToolCall struct {
 	IsInterrupted bool              // Whether the tool was interrupted by the user
 	HasMissingResult bool           // Whether the tool result is missing
 	HasMissingSidechain bool        // Whether Task tool sidechain conversation is missing
+	CWD          string            // Current working directory when the tool was called
 }

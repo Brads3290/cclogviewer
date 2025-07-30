@@ -248,13 +248,15 @@ const htmlTemplate = `<!DOCTYPE html>
             gap: 10px;
             cursor: pointer;
             user-select: none;
+            position: relative;
+            padding: 10px;
+            margin: -10px;
+            border-radius: 4px;
+            padding-right: 150px; /* Make room for the tool ID */
         }
         
         .tool-header:hover {
             background: #e9ecef;
-            margin: -10px;
-            padding: 10px;
-            border-radius: 4px;
         }
         
         .tool-name {
@@ -267,13 +269,27 @@ const htmlTemplate = `<!DOCTYPE html>
             font-size: 0.9em;
         }
         
+        .tool-id {
+            position: absolute;
+            right: 10px;
+            color: #999;
+            font-size: 0.85em;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        
+        .tool-id-copy {
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
         .expand-icon {
             width: 20px;
             height: 20px;
             transition: transform 0.2s;
         }
         
-        .tool-call.expanded .expand-icon {
+        .tool-call.expanded > .tool-header > .expand-icon {
             transform: rotate(90deg);
         }
         
@@ -633,6 +649,93 @@ const htmlTemplate = `<!DOCTYPE html>
             word-wrap: break-word;
             padding-right: 10px;
         }
+        
+        /* Bash tool display styles */
+        .bash-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        
+        .bash-header {
+            background: #e9ecef;
+            padding: 8px 12px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .bash-header .terminal-icon {
+            color: #0d6efd;
+            font-size: 1.1em;
+        }
+        
+        .bash-header .command-label {
+            color: #495057;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        .bash-header .description {
+            color: #6c757d;
+            font-size: 0.85em;
+            margin-left: auto;
+        }
+        
+        .bash-terminal {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            font-size: 0.9em;
+            line-height: 1.4;
+            color: #212529;
+        }
+        
+        .bash-cwd {
+            color: #6c757d;
+            font-size: 0.85em;
+            margin-bottom: 4px;
+        }
+        
+        .bash-command-line {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        
+        .bash-prompt {
+            color: #0d6efd;
+            font-weight: bold;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+        
+        .bash-command {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #212529;
+            flex: 1;
+        }
+        
+        .bash-output {
+            color: #495057;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .bash-timeout {
+            color: #fd7e14;
+            font-size: 0.8em;
+            float: right;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
@@ -930,6 +1033,14 @@ const htmlTemplate = `<!DOCTYPE html>
              data-tool-name="{{.Name}}"
              data-parent-entry="{{shortUUID $.UUID}}"
              {{if .TaskEntries}}data-has-task-entries="true"{{end}}>
+            {{if eq .Name "Bash"}}
+            {{/* For Bash tool, show terminal directly without collapsible section */}}
+            <div class="bash-tool-container">
+                {{formatBashResult .}}
+                <div class="tool-id-copy" style="margin-top: 10px;">Tool ID: <code>{{.ID}}</code></div>
+            </div>
+            {{else}}
+            {{/* For other tools, keep the collapsible section */}}
             <div class="tool-header">
                 <svg class="expand-icon" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
@@ -946,6 +1057,7 @@ const htmlTemplate = `<!DOCTYPE html>
                     ⚠️ {{if and .HasMissingResult .HasMissingSidechain}}The tool result and conversation are missing{{else if .HasMissingResult}}The tool result is missing{{else}}The conversation is missing{{end}}. The log file may be incomplete.
                 </span>
                 {{end}}
+                <span class="tool-id">{{.ID}}</span>
             </div>
             <div class="tool-details">
                 {{.Input}}
@@ -963,6 +1075,8 @@ const htmlTemplate = `<!DOCTYPE html>
                 {{if eq .Name "Read"}}
                     {{/* For Read tool, show the content inline */}}
                     {{formatReadResult .Result.Content}}
+                {{else if eq .Name "Bash"}}
+                    {{/* For Bash tool, result is already integrated into the display */}}
                 {{else if and (or (eq .Name "Edit") (eq .Name "MultiEdit")) (not .Result.IsError)}}
                     {{/* For Edit/MultiEdit tools, only show result if it's an error */}}
                 {{else}}
@@ -980,7 +1094,9 @@ const htmlTemplate = `<!DOCTYPE html>
                     </div>
                 {{end}}
                 {{end}}
+                <div class="tool-id-copy" style="margin-top: 10px;">Tool ID: <code>{{.ID}}</code></div>
             </div>
+            {{end}}
         </div>
         {{if .CompactView}}
         {{.CompactView}}

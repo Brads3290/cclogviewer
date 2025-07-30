@@ -43,7 +43,7 @@ func ProcessUserMessage(msg map[string]interface{}) string {
 }
 
 // ProcessAssistantMessage processes assistant messages and returns raw content and tool calls
-func ProcessAssistantMessage(msg map[string]interface{}) (string, []models.ToolCall) {
+func ProcessAssistantMessage(msg map[string]interface{}, cwd string) (string, []models.ToolCall) {
 	var content strings.Builder
 	var toolCalls []models.ToolCall
 
@@ -60,6 +60,7 @@ func ProcessAssistantMessage(msg map[string]interface{}) (string, []models.ToolC
 					}
 				case "tool_use":
 					tool := ProcessToolUse(contentItem)
+					tool.CWD = cwd
 					toolCalls = append(toolCalls, tool)
 				}
 			}

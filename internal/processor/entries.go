@@ -397,7 +397,7 @@ func processEntry(entry models.LogEntry) *models.ProcessedEntry {
 				processed.CommandArgs = extractXMLContent(processed.Content, "command-args")
 			}
 		case "assistant":
-			processed.Content, processed.ToolCalls = ProcessAssistantMessage(msg)
+			processed.Content, processed.ToolCalls = ProcessAssistantMessage(msg, entry.CWD)
 		}
 
 		// Check if it's an error and extract tool result ID
