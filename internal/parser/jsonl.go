@@ -33,7 +33,7 @@ func ReadJSONLFile(filename string) ([]models.LogEntry, error) {
 			}
 			continue
 		}
-		
+
 		// Skip summary messages
 		if entry.Type == "summary" {
 			if debug.Enabled {
@@ -41,7 +41,7 @@ func ReadJSONLFile(filename string) ([]models.LogEntry, error) {
 			}
 			continue
 		}
-		
+
 		entries = append(entries, entry)
 	}
 

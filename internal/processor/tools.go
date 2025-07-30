@@ -393,7 +393,7 @@ func formatReadToolInput(input map[string]interface{}) template.HTML {
 // formatReadToolDescription creates a description for Read tool that includes the file path
 func formatReadToolDescription(input map[string]interface{}) string {
 	filePath := GetStringValue(input, "file_path")
-	
+
 	// Get optional offset and limit
 	offset := 0
 	limit := 0
@@ -403,9 +403,9 @@ func formatReadToolDescription(input map[string]interface{}) string {
 	if val, ok := input["limit"].(float64); ok {
 		limit = int(val)
 	}
-	
+
 	desc := filePath
-	
+
 	// Add line info if offset/limit specified
 	if offset > 0 || limit > 0 {
 		if offset > 0 && limit > 0 {
@@ -416,7 +416,7 @@ func formatReadToolDescription(input map[string]interface{}) string {
 			desc += fmt.Sprintf(" (first %d lines)", limit)
 		}
 	}
-	
+
 	return desc
 }
 
@@ -427,12 +427,12 @@ func formatEditToolDescription(input map[string]interface{}) string {
 	if val, ok := input["replace_all"].(bool); ok {
 		replaceAll = val
 	}
-	
+
 	desc := filePath
 	if replaceAll {
 		desc += " (replace all)"
 	}
-	
+
 	return desc
 }
 
@@ -450,17 +450,17 @@ func formatMultiEditToolDescription(input map[string]interface{}) string {
 func formatBashToolInput(input map[string]interface{}, cwd string) template.HTML {
 	command := GetStringValue(input, "command")
 	description := GetStringValue(input, "description")
-	
+
 	// Get timeout if specified
 	timeoutStr := ""
 	if timeout, ok := input["timeout"].(float64); ok {
 		timeoutStr = fmt.Sprintf("timeout: %dms", int(timeout))
 	}
-	
+
 	// Build the bash display HTML
 	var bashHTML strings.Builder
 	bashHTML.WriteString(`<div class="bash-display">`)
-	
+
 	// Header with terminal icon and description
 	bashHTML.WriteString(`<div class="bash-header">`)
 	bashHTML.WriteString(`<span class="terminal-icon">💻</span>`) // Terminal icon
@@ -469,29 +469,29 @@ func formatBashToolInput(input map[string]interface{}, cwd string) template.HTML
 		bashHTML.WriteString(fmt.Sprintf(`<span class="description">%s</span>`, html.EscapeString(description)))
 	}
 	bashHTML.WriteString(`</div>`)
-	
+
 	// Terminal display
 	bashHTML.WriteString(`<div class="bash-terminal">`)
-	
+
 	// Show timeout if specified
 	if timeoutStr != "" {
 		bashHTML.WriteString(fmt.Sprintf(`<span class="bash-timeout">%s</span>`, timeoutStr))
 	}
-	
+
 	// Current working directory
 	if cwd != "" {
 		bashHTML.WriteString(fmt.Sprintf(`<div class="bash-cwd">%s</div>`, html.EscapeString(cwd)))
 	}
-	
+
 	// Command line with prompt
 	bashHTML.WriteString(`<div class="bash-command-line">`)
 	bashHTML.WriteString(`<span class="bash-prompt">$</span>`)
 	bashHTML.WriteString(fmt.Sprintf(`<span class="bash-command">%s</span>`, html.EscapeString(command)))
 	bashHTML.WriteString(`</div>`)
-	
+
 	// Note: The result will be added by the template when rendering
 	bashHTML.WriteString(`</div>`)
-	
+
 	bashHTML.WriteString(`</div>`)
 	return template.HTML(bashHTML.String())
 }

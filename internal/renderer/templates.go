@@ -58,14 +58,14 @@ func LoadTemplates(funcMap template.FuncMap) (*template.Template, error) {
 
 	// Define the styles template that includes all CSS files
 	stylesTemplate := `{{define "styles"}}` + "\n"
-	
+
 	// Read all CSS files
 	cssFiles := []string{
 		"templates/styles/main.css",
 		"templates/styles/themes.css",
 		"templates/styles/components.css",
 	}
-	
+
 	for _, cssFile := range cssFiles {
 		content, err := templateFS.ReadFile(cssFile)
 		if err != nil {
@@ -73,9 +73,9 @@ func LoadTemplates(funcMap template.FuncMap) (*template.Template, error) {
 		}
 		stylesTemplate += string(content) + "\n"
 	}
-	
+
 	stylesTemplate += "{{end}}"
-	
+
 	_, err = tmpl.New("styles-template").Parse(stylesTemplate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse styles template: %w", err)
@@ -83,12 +83,12 @@ func LoadTemplates(funcMap template.FuncMap) (*template.Template, error) {
 
 	// Define the scripts template that includes all JS files
 	scriptsTemplate := `{{define "scripts"}}` + "\n"
-	
+
 	// Read all JS files
 	jsFiles := []string{
 		"templates/scripts/main.js",
 	}
-	
+
 	for _, jsFile := range jsFiles {
 		content, err := templateFS.ReadFile(jsFile)
 		if err != nil {
@@ -96,9 +96,9 @@ func LoadTemplates(funcMap template.FuncMap) (*template.Template, error) {
 		}
 		scriptsTemplate += string(content) + "\n"
 	}
-	
+
 	scriptsTemplate += "{{end}}"
-	
+
 	_, err = tmpl.New("scripts-template").Parse(scriptsTemplate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse scripts template: %w", err)

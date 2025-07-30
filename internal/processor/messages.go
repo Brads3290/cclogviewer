@@ -13,13 +13,12 @@ func ProcessUserMessage(msg map[string]interface{}) string {
 	if contentArray, ok := msg["content"].([]interface{}); ok && len(contentArray) > 0 {
 		if contentItem, ok := contentArray[0].(map[string]interface{}); ok {
 			contentType := GetStringValue(contentItem, "type")
-			
+
 			switch contentType {
 			case "text":
 				// Handle text content (including interrupted messages)
 				text := GetStringValue(contentItem, "text")
-				
-				
+
 				return text
 			case "tool_result":
 				// Handle tool result content
@@ -69,4 +68,3 @@ func ProcessAssistantMessage(msg map[string]interface{}, cwd string) (string, []
 
 	return content.String(), toolCalls
 }
-

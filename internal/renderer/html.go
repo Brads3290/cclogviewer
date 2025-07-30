@@ -6,8 +6,8 @@ import (
 	"html"
 	"html/template"
 	"os"
-	"strings"
 	"regexp"
+	"strings"
 )
 
 // GenerateHTML generates an HTML file from processed entries
@@ -44,24 +44,24 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 		"formatContent": func(content string) template.HTML {
 			// Escape HTML
 			content = html.EscapeString(content)
-			
+
 			// Check if content is enclosed in square brackets
 			trimmed := strings.TrimSpace(content)
 			if strings.HasPrefix(trimmed, "[") && strings.HasSuffix(trimmed, "]") {
 				// Check if it's an ANSI escape sequence
 				if !regexp.MustCompile(`\[\d+m`).MatchString(trimmed) {
 					// Regular bracketed message (like [Request interrupted by user])
-					stripped := trimmed[1:len(trimmed)-1]
+					stripped := trimmed[1 : len(trimmed)-1]
 					content = fmt.Sprintf(`<span style="color: #999; font-style: italic;">%s</span>`, stripped)
 				}
 			}
-			
+
 			// Convert ANSI escape codes to HTML
 			content = convertANSIToHTML(content)
-			
+
 			// Convert newlines to <br>
 			content = strings.ReplaceAll(content, "\n", "<br>")
-			
+
 			return template.HTML(content)
 		},
 		"shortUUID": func(uuid string) string {
@@ -75,15 +75,15 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 			// Format Read tool results with line numbers
 			lines := strings.Split(content, "\n")
 			var result strings.Builder
-			
+
 			result.WriteString(`<div class="read-content">`)
 			result.WriteString(`<div class="read-code">`)
-			
+
 			for _, line := range lines {
 				// Extract line number from the format: "   123→content"
 				lineNum := ""
 				lineContent := line
-				
+
 				if idx := strings.Index(line, "→"); idx > 0 {
 					lineNum = strings.TrimSpace(line[:idx])
 					// Get the content after the arrow, handling UTF-8 properly
@@ -95,7 +95,7 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 						lineContent = ""
 					}
 				}
-				
+
 				result.WriteString(`<div class="read-line">`)
 				if lineNum != "" {
 					result.WriteString(fmt.Sprintf(`<span class="line-number">%s</span>`, html.EscapeString(lineNum)))
@@ -107,10 +107,10 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 				result.WriteString(`</span>`)
 				result.WriteString(`</div>`)
 			}
-			
+
 			result.WriteString(`</div>`)
 			result.WriteString(`</div>`)
-			
+
 			return template.HTML(result.String())
 		},
 		"formatBashResult": func(toolCall interface{}) template.HTML {
@@ -119,9 +119,9 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 			if !ok || tc.Name != "Bash" {
 				return ""
 			}
-			
+
 			var result strings.Builder
-			
+
 			// Add the bash display with integrated result
 			input, _ := tc.RawInput.(map[string]interface{})
 			command := ""
@@ -130,9 +130,9 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 				command = strings.TrimSpace(fmt.Sprintf("%v", input["command"]))
 				description = strings.TrimSpace(fmt.Sprintf("%v", input["description"]))
 			}
-			
+
 			result.WriteString(`<div class="bash-display">`)
-			
+
 			// Header
 			result.WriteString(`<div class="bash-header">`)
 			result.WriteString(`<span class="terminal-icon">💻</span>`)
@@ -141,30 +141,30 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 				result.WriteString(fmt.Sprintf(`<span class="description">%s</span>`, html.EscapeString(description)))
 			}
 			result.WriteString(`</div>`)
-			
+
 			// Terminal
 			result.WriteString(`<div class="bash-terminal">`)
-			
+
 			// CWD
 			if tc.CWD != "" {
 				result.WriteString(fmt.Sprintf(`<div class="bash-cwd">%s</div>`, html.EscapeString(tc.CWD)))
 			}
-			
+
 			// Command
 			result.WriteString(`<div class="bash-command-line">`)
 			result.WriteString(`<span class="bash-prompt">$</span>`)
 			result.WriteString(fmt.Sprintf(`<span class="bash-command">%s</span>`, html.EscapeString(command)))
 			result.WriteString(`</div>`)
-			
+
 			// Output
 			if tc.Result != nil && tc.Result.Content != "" {
 				lines := strings.Split(tc.Result.Content, "\n")
 				lineCount := len(lines)
-				
+
 				if lineCount > 20 {
 					// For outputs over 20 lines, add collapsible functionality
 					result.WriteString(`<div class="bash-output" style="position: relative;">`)
-					
+
 					// First 20 lines always visible
 					visibleLines := lines[:20]
 					for i, line := range visibleLines {
@@ -173,7 +173,7 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 						}
 						result.WriteString(convertANSIToHTML(html.EscapeString(line)))
 					}
-					
+
 					// Hidden lines
 					result.WriteString(`<div class="bash-more-content" style="display: none;">`)
 					for i := 20; i < lineCount; i++ {
@@ -181,7 +181,7 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 						result.WriteString(convertANSIToHTML(html.EscapeString(lines[i])))
 					}
 					result.WriteString(`</div>`)
-					
+
 					// More/Less link
 					result.WriteString(`<div style="margin-top: 5px;">`)
 					result.WriteString(`<a href="#" class="bash-more-link" style="color: #0066cc; text-decoration: none;" onclick="`)
@@ -192,7 +192,7 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 					result.WriteString(`this.textContent = isHidden ? 'Less' : 'More'; `)
 					result.WriteString(`return false;">More</a>`)
 					result.WriteString(`</div>`)
-					
+
 					result.WriteString(`</div>`)
 				} else {
 					// For outputs under 20 lines, show all
@@ -204,10 +204,10 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 					result.WriteString(`</div>`)
 				}
 			}
-			
+
 			result.WriteString(`</div>`)
 			result.WriteString(`</div>`)
-			
+
 			return template.HTML(result.String())
 		},
 	}
@@ -251,22 +251,22 @@ func convertANSIToHTML(text string) string {
 	// [0m = reset all
 	// [39m = default foreground color
 	// [49m = default background color
-	
+
 	// Simple approach: handle the most common cases
 	ansiPattern := regexp.MustCompile(`\[(\d+)m`)
-	
+
 	var result strings.Builder
 	lastIndex := 0
 	openTags := []string{}
 	openSpans := []string{} // Track color spans separately
-	
+
 	for _, match := range ansiPattern.FindAllStringSubmatchIndex(text, -1) {
 		// Add text before the match
 		result.WriteString(text[lastIndex:match[0]])
-		
+
 		// Get the ANSI code
 		code := text[match[2]:match[3]]
-		
+
 		switch code {
 		case "1":
 			result.WriteString(`<strong>`)
@@ -371,13 +371,13 @@ func convertANSIToHTML(text string) string {
 			openTags = nil
 			openSpans = nil
 		}
-		
+
 		lastIndex = match[1]
 	}
-	
+
 	// Add remaining text
 	result.WriteString(text[lastIndex:])
-	
+
 	// Close any remaining open tags and spans
 	for i := len(openTags) - 1; i >= 0; i-- {
 		result.WriteString(openTags[i])
@@ -385,6 +385,6 @@ func convertANSIToHTML(text string) string {
 	for i := len(openSpans) - 1; i >= 0; i-- {
 		result.WriteString(openSpans[i])
 	}
-	
+
 	return result.String()
 }

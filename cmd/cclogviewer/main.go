@@ -46,7 +46,7 @@ func main() {
 				version = "unknown"
 			}
 		}
-		
+
 		fmt.Printf("cclogviewer version %s", version)
 		if BuildTime != "" {
 			fmt.Printf(" (built %s)", BuildTime)
