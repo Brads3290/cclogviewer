@@ -11,10 +11,10 @@ import (
 func EstimateTokens(text string) int {
 	// Remove HTML tags for more accurate counting
 	cleaned := stripHTMLTags(text)
-	
+
 	// Simple approximation: count words and divide by typical token/word ratio
 	words := countWords(cleaned)
-	
+
 	// On average, 1 word ≈ 1.3 tokens for English text
 	// This is a rough approximation that works reasonably well
 	return int(float64(words) * 1.3)
@@ -40,7 +40,7 @@ func stripHTMLTags(html string) string {
 func countWords(text string) int {
 	count := 0
 	inWord := false
-	
+
 	for _, r := range text {
 		if unicode.IsSpace(r) || unicode.IsPunct(r) {
 			if inWord {
@@ -51,10 +51,10 @@ func countWords(text string) int {
 			inWord = true
 		}
 	}
-	
+
 	if inWord {
 		count++
 	}
-	
+
 	return count
 }

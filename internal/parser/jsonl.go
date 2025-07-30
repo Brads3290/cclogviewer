@@ -2,9 +2,9 @@ package parser
 
 import (
 	"bufio"
+	"encoding/json"
 	"github.com/Brads3290/cclogviewer/internal/debug"
 	"github.com/Brads3290/cclogviewer/internal/models"
-	"encoding/json"
 	"log"
 	"os"
 )
@@ -33,6 +33,15 @@ func ReadJSONLFile(filename string) ([]models.LogEntry, error) {
 			}
 			continue
 		}
+		
+		// Skip summary messages
+		if entry.Type == "summary" {
+			if debug.Enabled {
+				log.Printf("Skipping summary message at line %d", lineNum)
+			}
+			continue
+		}
+		
 		entries = append(entries, entry)
 	}
 

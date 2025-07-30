@@ -1,13 +1,13 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"github.com/Brads3290/cclogviewer/internal/browser"
 	"github.com/Brads3290/cclogviewer/internal/debug"
 	"github.com/Brads3290/cclogviewer/internal/parser"
 	"github.com/Brads3290/cclogviewer/internal/processor"
 	"github.com/Brads3290/cclogviewer/internal/renderer"
-	"flag"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -45,14 +45,14 @@ func main() {
 	}
 
 	processed := processor.ProcessEntries(entries)
-	
-	err = renderer.GenerateHTML(processed, outputFile)
+
+	err = renderer.GenerateHTML(processed, outputFile, debug.Enabled)
 	if err != nil {
 		log.Fatalf("Error generating HTML: %v", err)
 	}
 
 	fmt.Printf("Successfully generated %s\n", outputFile)
-	
+
 	// Open browser if -open flag was set OR if output was auto-generated
 	if openBrowser || autoOpen {
 		if err := browser.OpenInBrowser(outputFile); err != nil {

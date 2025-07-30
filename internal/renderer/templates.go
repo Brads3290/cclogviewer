@@ -75,19 +75,6 @@ const htmlTemplate = `<!DOCTYPE html>
             margin-left: 0; /* Override any margin for entries within task */
         }
         
-        /* Ensure tool details in sub-agent conversations start collapsed */
-        .task-entry .tool-details {
-            display: none !important;
-        }
-        
-        .task-entry .tool-call.expanded .tool-details {
-            display: block !important;
-        }
-        
-        /* Fix chevron rotation in sub-agent conversations */
-        .task-entry .expanded .expand-icon {
-            transform: rotate(90deg);
-        }
         
         .entry-header {
             display: flex;
@@ -174,7 +161,7 @@ const htmlTemplate = `<!DOCTYPE html>
             transition: transform 0.2s;
         }
         
-        .expanded .expand-icon {
+        .tool-call.expanded .expand-icon {
             transform: rotate(90deg);
         }
         
@@ -185,7 +172,8 @@ const htmlTemplate = `<!DOCTYPE html>
             border-top: 1px solid #dee2e6;
         }
         
-        .expanded .tool-details {
+        /* Only show tool-details when the immediate parent tool-call has expanded class */
+        .tool-call.expanded > .tool-details {
             display: block;
         }
         
@@ -193,8 +181,10 @@ const htmlTemplate = `<!DOCTYPE html>
             background: #f1f3f5;
             padding: 10px;
             border-radius: 4px;
-            overflow-x: auto;
-            font-size: 0.85em;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-word;
+            font-size: 1em;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             line-height: 1.4;
         }
@@ -202,6 +192,8 @@ const htmlTemplate = `<!DOCTYPE html>
         .tool-input pre {
             white-space: pre-wrap;
             word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         
         .tool-result {
@@ -252,37 +244,6 @@ const htmlTemplate = `<!DOCTYPE html>
         }
         
         /* Diff view styles */
-        .edit-diff {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 0;
-            margin: 0;
-            overflow: hidden;
-        }
-        
-        .diff-header {
-            background: #e9ecef;
-            padding: 10px 15px;
-            font-weight: bold;
-            border-bottom: 1px solid #dee2e6;
-        }
-        
-        .diff-header .file-path {
-            color: #0056b3;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.9em;
-        }
-        
-        .diff-header .replace-all {
-            background: #6c757d;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 0.75em;
-            margin-left: 10px;
-        }
-        
         .diff-content {
             background: #fafafa;
         }
@@ -293,35 +254,32 @@ const htmlTemplate = `<!DOCTYPE html>
         
         .diff-code {
             margin: 0;
-            padding: 10px;
+            padding: 0;
             overflow-x: auto;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             font-size: 0.85em;
-            line-height: 1.4;
-            white-space: pre;
+            white-space: pre-wrap;
+            word-wrap: break-word;
             background: #fafafa;
         }
         
         .diff-line {
-            display: block;
-            padding: 0 15px;
+            display: flex;
+            align-items: flex-start;
+            padding: 0;
             margin: 0;
-            line-height: 1.4;
         }
         
         .diff-line.line-removed {
             background: #ffebee;
-            color: #d32f2f;
         }
         
         .diff-line.line-added {
             background: #e8f5e9;
-            color: #388e3c;
         }
         
         .diff-line.line-unchanged {
             background: transparent;
-            color: #666;
         }
         
         .diff-code .line-number {
@@ -330,31 +288,41 @@ const htmlTemplate = `<!DOCTYPE html>
             margin-right: 10px;
             display: inline-block;
             text-align: right;
-            width: 30px;
+            flex-shrink: 0;
+            padding-left: 10px;
+            line-height: 1.3;
         }
         
         .diff-code .line-prefix {
             font-weight: bold;
             margin-right: 8px;
+            flex-shrink: 0;
+            line-height: 1.3;
         }
         
-        /* Multi-edit styles */
-        .multi-edit {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 0;
-            margin: 0;
-            overflow: hidden;
+        .diff-line.line-removed .line-prefix,
+        .diff-line.line-removed .line-content {
+            color: #d32f2f;
         }
         
-        .multi-edit .diff-header {
-            margin-bottom: 0;
+        .diff-line.line-added .line-prefix,
+        .diff-line.line-added .line-content {
+            color: #388e3c;
         }
         
-        .multi-edit .edit-item {
-            padding: 10px 15px;
+        .diff-line.line-unchanged .line-prefix,
+        .diff-line.line-unchanged .line-content {
+            color: #666;
         }
+        
+        .diff-code .line-content {
+            flex: 1;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            padding-right: 10px;
+            line-height: 1.3;
+        }
+        
         
         /* Compact todo list styles */
         .todo-compact {
@@ -474,17 +442,102 @@ const htmlTemplate = `<!DOCTYPE html>
             display: inline-block;
             font-family: monospace;
         }
+        
+        /* Read tool display styles */
+        .read-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        .read-header {
+            background: #e9ecef;
+            padding: 10px 15px;
+            font-weight: bold;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .read-header .file-path {
+            color: #0056b3;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+        
+        .read-header .line-info {
+            color: #6c757d;
+            font-size: 0.8em;
+            margin-left: 10px;
+            font-weight: normal;
+        }
+        
+        .read-content {
+            background: #fafafa;
+            padding: 0;
+        }
+        
+        .read-code {
+            margin: 0;
+            padding: 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85em;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #fafafa;
+            /* Ensure proper UTF-8 rendering */
+            unicode-bidi: plaintext;
+        }
+        
+        .read-line {
+            display: flex;
+            padding: 0;
+            margin: 0;
+            line-height: 1.4;
+        }
+        
+        .read-line:hover {
+            background: #f0f0f0;
+        }
+        
+        .read-code .line-number {
+            color: #999;
+            user-select: none;
+            margin-right: 15px;
+            display: inline-block;
+            text-align: right;
+            width: 40px;
+            flex-shrink: 0;
+            align-self: flex-start;
+            padding-left: 10px;
+        }
+        
+        .read-code .line-content {
+            flex: 1;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            padding-right: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Claude Code Conversation Log</h1>
-        {{range .}}
+        {{range .Entries}}
             {{template "entry" .}}
         {{end}}
     </div>
     
     <script>
+        {{if $.Debug}}
+        const debugLog = (...args) => console.log('[DEBUG]', ...args);
+        {{else}}
+        const debugLog = () => {};
+        {{end}}
+        
         // Use event delegation for tool call toggling
         document.addEventListener('click', (e) => {
             // Handle tool header clicks
@@ -492,7 +545,82 @@ const htmlTemplate = `<!DOCTYPE html>
             if (toolHeader) {
                 e.preventDefault();
                 e.stopPropagation();
+                
+                {{if $.Debug}}
+                debugLog('=== Tool header clicked ===');
+                const toolCall = toolHeader.parentElement;
+                debugLog('Tool debug-id:', toolCall.getAttribute('data-debug-id'));
+                debugLog('Tool name:', toolCall.getAttribute('data-tool-name'));
+                debugLog('Parent entry:', toolCall.getAttribute('data-parent-entry'));
+                debugLog('Has task entries:', toolCall.getAttribute('data-has-task-entries'));
+                debugLog('Current classes:', toolCall.className);
+                debugLog('Has expanded class:', toolCall.classList.contains('expanded'));
+                
+                // Build hierarchy path
+                const buildPath = (elem) => {
+                    const path = [];
+                    let current = elem;
+                    while (current) {
+                        const debugId = current.getAttribute('data-debug-id');
+                        if (debugId) {
+                            path.unshift(debugId);
+                        }
+                        current = current.parentElement.closest('[data-debug-id]');
+                    }
+                    return path.join(' > ');
+                };
+                debugLog('Full hierarchy path:', buildPath(toolCall));
+                
+                // Check if it's in a task-entry
+                const taskEntry = toolCall.closest('.task-entry');
+                debugLog('Inside task-entry:', !!taskEntry);
+                if (taskEntry) {
+                    debugLog('Task entry debug-id:', taskEntry.getAttribute('data-debug-id'));
+                    debugLog('Parent tool:', taskEntry.getAttribute('data-parent-tool'));
+                    debugLog('Nested task entries within:', 
+                        Array.from(toolCall.querySelectorAll('.task-entry')).length);
+                }
+                
+                // Get tool-details element
+                const toolDetails = toolCall.querySelector('.tool-details');
+                if (toolDetails) {
+                    debugLog('Tool details element:', toolDetails);
+                    debugLog('Tool details computed style:', 
+                        window.getComputedStyle(toolDetails).display);
+                    
+                    // Check all applicable CSS rules
+                    const allRules = [];
+                    for (const sheet of document.styleSheets) {
+                        try {
+                            for (const rule of sheet.cssRules) {
+                                if (rule.selectorText && toolDetails.matches(rule.selectorText)) {
+                                    allRules.push({
+                                        selector: rule.selectorText,
+                                        display: rule.style.display
+                                    });
+                                }
+                            }
+                        } catch (e) {
+                            // Cross-origin stylesheets will throw
+                        }
+                    }
+                    debugLog('Matching CSS rules:', allRules);
+                }
+                {{end}}
+                
                 toolHeader.parentElement.classList.toggle('expanded');
+                
+                {{if $.Debug}}
+                debugLog('=== After toggle ===');
+                debugLog('Has expanded class:', 
+                    toolHeader.parentElement.classList.contains('expanded'));
+                if (toolDetails) {
+                    const afterDisplay = window.getComputedStyle(toolDetails).display;
+                    debugLog('Tool details computed style:', afterDisplay);
+                    debugLog('Display changed:', afterDisplay !== 'none' ? 'VISIBLE' : 'HIDDEN');
+                }
+                debugLog('========================');
+                {{end}}
             }
             
             // Handle result header clicks
@@ -508,6 +636,23 @@ const htmlTemplate = `<!DOCTYPE html>
                     icon.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
                 }
             }
+            
+            // Handle caveat message header clicks
+            const caveatHeader = e.target.closest('.caveat-header');
+            if (caveatHeader) {
+                e.preventDefault();
+                e.stopPropagation();
+                const icon = caveatHeader.querySelector('.caveat-expand-icon');
+                const content = caveatHeader.nextElementSibling;
+                if (content) {
+                    const isHidden = content.style.display === 'none';
+                    content.style.display = isHidden ? 'block' : 'none';
+                    icon.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+                    
+                    // No need to update the header text - it stays the same
+                }
+            }
+            
         });
         
         // Global state for token details visibility
@@ -540,12 +685,61 @@ const htmlTemplate = `<!DOCTYPE html>
             }
         });
         
+        {{if $.Debug}}
+        // Debug CSS rules on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            debugLog('=== Page loaded - checking CSS rules ===');
+            const toolCalls = document.querySelectorAll('.tool-call');
+            debugLog('Total tool calls found:', toolCalls.length);
+            
+            // List all tool calls with their debug IDs
+            toolCalls.forEach((tc, index) => {
+                const debugId = tc.getAttribute('data-debug-id');
+                const toolName = tc.getAttribute('data-tool-name');
+                const hasTaskEntries = tc.getAttribute('data-has-task-entries');
+                debugLog('Tool ' + index + ': ' + debugId + ' (' + toolName + ') - Has tasks: ' + hasTaskEntries);
+            });
+            
+            // Check nested tool calls
+            const nestedToolCalls = document.querySelectorAll('.task-entry .tool-call');
+            debugLog('\nNested tool calls:', nestedToolCalls.length);
+            
+            // Check for any expanded ancestors
+            debugLog('\nChecking for expanded ancestors:');
+            document.querySelectorAll('.expanded').forEach((elem, index) => {
+                debugLog('Expanded element ' + index + ':', elem.getAttribute('data-debug-id') || elem.className);
+            });
+            
+            // Detail each nested tool call
+            nestedToolCalls.forEach((tc, index) => {
+                const debugId = tc.getAttribute('data-debug-id');
+                const toolName = tc.getAttribute('data-tool-name');
+                const taskEntry = tc.closest('.task-entry');
+                const taskDebugId = taskEntry ? taskEntry.getAttribute('data-debug-id') : 'none';
+                const toolDetails = tc.querySelector('.tool-details');
+                const display = toolDetails ? window.getComputedStyle(toolDetails).display : 'no-details';
+                
+                debugLog('Nested ' + index + ': ' + debugId + ' (' + toolName + ')');
+                debugLog('  In task-entry: ' + taskDebugId);
+                debugLog('  Tool-details display: ' + display);
+                debugLog('  Has expanded class: ' + tc.classList.contains('expanded'));
+            });
+            
+            debugLog('========================');
+        });
+        {{end}}
+        
     </script>
 </body>
 </html>
 
 {{define "entry"}}
-<div class="entry {{.Type}}{{if .IsSidechain}} sidechain{{end}}">
+{{if or (ne .Content "") .ToolCalls}}{{/* Render if content is not empty OR has tool calls */}}
+<div class="entry {{.Type}}{{if .IsSidechain}} sidechain{{end}}" 
+     data-debug-id="entry-{{shortUUID .UUID}}"
+     data-uuid="{{.UUID}}"
+     data-parent-uuid="{{.ParentUUID}}"
+     data-is-sidechain="{{.IsSidechain}}">
     <div class="entry-header">
         {{if .IsSidechain}}
             {{if eq .Role "user"}}
@@ -585,12 +779,43 @@ const htmlTemplate = `<!DOCTYPE html>
         {{end}}
     </div>
     
-    <div class="content">{{.Content}}</div>
+    {{if .IsCaveatMessage}}
+    <div class="caveat-message">
+        <div class="caveat-header" style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 5px; color: #999; font-style: italic;">
+            <svg class="caveat-expand-icon" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="transition: transform 0.2s;">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+            </svg>
+            <span>Command caveat message</span>
+        </div>
+        <div class="caveat-content" style="display: none; margin-top: 10px;">
+            <div class="content">{{formatContent .Content}}</div>
+        </div>
+    </div>
+    {{else if .IsCommandMessage}}
+    <div class="command-message">
+        <div style="color: #999; font-style: italic;">
+            {{.CommandName}}{{if .CommandArgs}} {{.CommandArgs}}{{end}}
+        </div>
+        {{if .CommandOutput}}
+        <div style="margin-top: 5px; color: #666;">
+            {{formatContent .CommandOutput}}
+        </div>
+        {{end}}
+    </div>
+    {{else if eq .Content ""}}
+    {{/* Hide entries with empty content (stdout messages that were linked to commands) */}}
+    {{else}}
+    <div class="content">{{formatContent .Content}}</div>
+    {{end}}
     
     {{if .ToolCalls}}
     <div class="tool-calls">
         {{range .ToolCalls}}
-        <div class="tool-call">
+        <div class="tool-call" 
+             data-debug-id="tool-{{.ID}}" 
+             data-tool-name="{{.Name}}"
+             data-parent-entry="{{shortUUID $.UUID}}"
+             {{if .TaskEntries}}data-has-task-entries="true"{{end}}>
             <div class="tool-header">
                 <svg class="expand-icon" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
@@ -599,30 +824,47 @@ const htmlTemplate = `<!DOCTYPE html>
                 {{if .Description}}
                 <span class="tool-description">{{.Description}}</span>
                 {{end}}
+                {{if .IsInterrupted}}
+                <span style="color: #dc3545; margin-left: 10px;" title="Request interrupted by user">⚠️ Interrupted</span>
+                {{end}}
+                {{if or .HasMissingResult .HasMissingSidechain}}
+                <span style="color: #ffc107; margin-left: 10px;" title="The log file may be incomplete">
+                    ⚠️ {{if and .HasMissingResult .HasMissingSidechain}}The tool result and conversation are missing{{else if .HasMissingResult}}The tool result is missing{{else}}The conversation is missing{{end}}. The log file may be incomplete.
+                </span>
+                {{end}}
             </div>
             <div class="tool-details">
                 {{.Input}}
                 {{if .TaskEntries}}
+                {{$toolID := .ID}}
                 <div style="margin-top: 15px;">
                     {{range .TaskEntries}}
-                        <div class="task-entry">
+                        <div class="task-entry" data-debug-id="task-entry-{{shortUUID .UUID}}"  data-parent-tool="{{$toolID}}">
                             {{template "entry" .}}
                         </div>
                     {{end}}
                 </div>
                 {{end}}
                 {{if .Result}}
-                <div class="tool-result-section" style="margin-top: 15px;">
-                    <div class="result-header" style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 5px;">
-                        <svg class="result-expand-icon" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="transition: transform 0.2s;">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                        </svg>
-                        <strong>Result</strong>
+                {{if eq .Name "Read"}}
+                    {{/* For Read tool, show the content inline */}}
+                    {{formatReadResult .Result.Content}}
+                {{else if and (or (eq .Name "Edit") (eq .Name "MultiEdit")) (not .Result.IsError)}}
+                    {{/* For Edit/MultiEdit tools, only show result if it's an error */}}
+                {{else}}
+                    {{/* For other tools or Edit/MultiEdit with errors, show collapsible result section */}}
+                    <div class="tool-result-section" style="margin-top: 15px;">
+                        <div class="result-header" style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 5px;">
+                            <svg class="result-expand-icon" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="transition: transform 0.2s;">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            <strong>Result</strong>
+                        </div>
+                        <div class="result-content" style="display: none; margin-top: 10px;">
+                            {{formatContent .Result.Content}}
+                        </div>
                     </div>
-                    <div class="result-content" style="display: none; margin-top: 10px;">
-                        {{.Result.Content}}
-                    </div>
-                </div>
+                {{end}}
                 {{end}}
             </div>
         </div>
@@ -634,4 +876,5 @@ const htmlTemplate = `<!DOCTYPE html>
     {{end}}
     
 </div>
+{{end}}{{/* End of content check */}}
 {{end}}`

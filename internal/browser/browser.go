@@ -9,7 +9,7 @@ import (
 // OpenInBrowser opens the given file in the default browser
 func OpenInBrowser(filename string) error {
 	var cmd *exec.Cmd
-	
+
 	switch runtime.GOOS {
 	case "darwin":
 		cmd = exec.Command("open", filename)
@@ -20,6 +20,6 @@ func OpenInBrowser(filename string) error {
 	default:
 		return fmt.Errorf("unsupported platform: %s", runtime.GOOS)
 	}
-	
+
 	return cmd.Start()
 }

@@ -1,9 +1,9 @@
 package processor
 
 import (
-	"github.com/Brads3290/cclogviewer/internal/models"
 	"encoding/json"
 	"fmt"
+	"github.com/Brads3290/cclogviewer/internal/models"
 	"html"
 	"html/template"
 	"strings"
@@ -19,18 +19,29 @@ func ProcessToolUse(toolUse map[string]interface{}) models.ToolCall {
 	if input, ok := toolUse["input"].(map[string]interface{}); ok {
 		tool.Description = GetStringValue(input, "description")
 		tool.RawInput = input // Store raw input for later use
-		
+
+		// Special handling for Read and Edit tool descriptions
+		if tool.Name == "Read" {
+			tool.Description = formatReadToolDescription(input)
+		} else if tool.Name == "Edit" {
+			tool.Description = formatEditToolDescription(input)
+		} else if tool.Name == "MultiEdit" {
+			tool.Description = formatMultiEditToolDescription(input)
+		}
+
 		// Special handling for Edit and MultiEdit tools
 		if tool.Name == "Edit" {
 			tool.Input = formatEditToolInput(input)
 		} else if tool.Name == "MultiEdit" {
 			tool.Input = formatMultiEditToolInput(input)
+		} else if tool.Name == "Read" {
+			tool.Input = formatReadToolInput(input)
 		} else {
 			// Format the input as JSON
 			inputJSON, _ := json.MarshalIndent(input, "", "  ")
-			tool.Input = template.HTML(fmt.Sprintf(`<pre>%s</pre>`, html.EscapeString(string(inputJSON))))
+			tool.Input = template.HTML(fmt.Sprintf(`<div class="tool-input"><pre>%s</pre></div>`, html.EscapeString(string(inputJSON))))
 		}
-		
+
 		// Generate compact view for TodoWrite
 		if tool.Name == "TodoWrite" {
 			tool.CompactView = formatTodoWriteCompact(input)
@@ -51,11 +62,11 @@ type diffLine struct {
 func computeLineDiff(oldStr, newStr string) []diffLine {
 	oldLines := strings.Split(oldStr, "\n")
 	newLines := strings.Split(newStr, "\n")
-	
+
 	// For a simple implementation, we'll use a basic LCS approach
 	// This is not as sophisticated as a full diff algorithm but works well for most cases
 	diff := []diffLine{}
-	
+
 	// If strings are identical, return all unchanged lines
 	if oldStr == newStr {
 		for i, line := range oldLines {
@@ -67,15 +78,15 @@ func computeLineDiff(oldStr, newStr string) []diffLine {
 		}
 		return diff
 	}
-	
+
 	// Simple diff: find longest common subsequence
 	lcs := longestCommonSubsequence(oldLines, newLines)
-	
+
 	// Build diff from LCS
 	oldIdx, newIdx := 0, 0
 	lcsIdx := 0
 	lineNum := 1
-	
+
 	for oldIdx < len(oldLines) || newIdx < len(newLines) {
 		if lcsIdx < len(lcs) && oldIdx < len(oldLines) && newIdx < len(newLines) &&
 			oldLines[oldIdx] == lcs[lcsIdx] && newLines[newIdx] == lcs[lcsIdx] {
@@ -109,7 +120,7 @@ func computeLineDiff(oldStr, newStr string) []diffLine {
 			lineNum++
 		}
 	}
-	
+
 	return diff
 }
 
@@ -120,7 +131,7 @@ func longestCommonSubsequence(a, b []string) []string {
 	for i := range dp {
 		dp[i] = make([]int, n+1)
 	}
-	
+
 	// Build the DP table
 	for i := 1; i <= m; i++ {
 		for j := 1; j <= n; j++ {
@@ -131,7 +142,7 @@ func longestCommonSubsequence(a, b []string) []string {
 			}
 		}
 	}
-	
+
 	// Reconstruct the LCS
 	lcs := []string{}
 	i, j := m, n
@@ -146,7 +157,7 @@ func longestCommonSubsequence(a, b []string) []string {
 			j--
 		}
 	}
-	
+
 	return lcs
 }
 
@@ -159,33 +170,22 @@ func max(a, b int) int {
 
 // formatEditToolInput creates a diff view for Edit tool inputs
 func formatEditToolInput(input map[string]interface{}) template.HTML {
-	filePath := GetStringValue(input, "file_path")
 	oldString := GetStringValue(input, "old_string")
 	newString := GetStringValue(input, "new_string")
-	replaceAll := false
-	if val, ok := input["replace_all"].(bool); ok {
-		replaceAll = val
-	}
 
 	// Compute the unified diff
 	diffLines := computeLineDiff(oldString, newString)
 
 	// Build the diff HTML
 	var diffHTML strings.Builder
-	diffHTML.WriteString(`<div class="edit-diff">`)
-	diffHTML.WriteString(fmt.Sprintf(`<div class="diff-header">📝 Edit: <span class="file-path">%s</span>`, html.EscapeString(filePath)))
-	if replaceAll {
-		diffHTML.WriteString(` <span class="replace-all">(Replace All)</span>`)
-	}
-	diffHTML.WriteString(`</div>`)
 	diffHTML.WriteString(`<div class="diff-content unified">`)
-	diffHTML.WriteString(`<pre class="diff-code">`)
-	
+	diffHTML.WriteString(`<div class="diff-code">`)
+
 	// Display the unified diff
-	for i, line := range diffLines {
+	for _, line := range diffLines {
 		var lineClass string
 		var prefix string
-		
+
 		switch line.Type {
 		case "removed":
 			lineClass = "line-removed"
@@ -197,23 +197,23 @@ func formatEditToolInput(input map[string]interface{}) template.HTML {
 			lineClass = "line-unchanged"
 			prefix = " "
 		}
-		
-		diffHTML.WriteString(fmt.Sprintf(`<span class="diff-line %s"><span class="line-number">%3d</span><span class="line-prefix">%s</span> %s</span>`,
-			lineClass, line.LineNum, prefix, html.EscapeString(line.Content)))
-		
-		if i < len(diffLines)-1 {
-			diffHTML.WriteString("\n")
-		}
+
+		diffHTML.WriteString(fmt.Sprintf(`<div class="diff-line %s">`, lineClass))
+		diffHTML.WriteString(fmt.Sprintf(`<span class="line-number">%3d</span>`, line.LineNum))
+		diffHTML.WriteString(fmt.Sprintf(`<span class="line-prefix">%s</span>`, prefix))
+		diffHTML.WriteString(`<span class="line-content">`)
+		diffHTML.WriteString(html.EscapeString(line.Content))
+		diffHTML.WriteString(`</span>`)
+		diffHTML.WriteString(`</div>`)
 	}
-	
-	diffHTML.WriteString(`</pre>`)
-	diffHTML.WriteString(`</div></div>`)
+
+	diffHTML.WriteString(`</div>`)
+	diffHTML.WriteString(`</div>`)
 	return template.HTML(diffHTML.String())
 }
 
 // formatMultiEditToolInput creates a diff view for MultiEdit tool inputs
 func formatMultiEditToolInput(input map[string]interface{}) template.HTML {
-	filePath := GetStringValue(input, "file_path")
 	edits, ok := input["edits"].([]interface{})
 	if !ok {
 		// Fallback to JSON display
@@ -223,47 +223,42 @@ func formatMultiEditToolInput(input map[string]interface{}) template.HTML {
 
 	// Build the multi-edit HTML
 	var multiEditHTML strings.Builder
-	multiEditHTML.WriteString(`<div class="multi-edit">`)
-	multiEditHTML.WriteString(fmt.Sprintf(`<div class="diff-header">📝 MultiEdit: <span class="file-path">%s</span> <span class="replace-all">%d edits</span></div>`, 
-		html.EscapeString(filePath), len(edits)))
-	
+
 	// Process each edit
 	for i, editInterface := range edits {
 		edit, ok := editInterface.(map[string]interface{})
 		if !ok {
 			continue
 		}
-		
+
 		oldString := GetStringValue(edit, "old_string")
 		newString := GetStringValue(edit, "new_string")
 		replaceAll := false
 		if val, ok := edit["replace_all"].(bool); ok {
 			replaceAll = val
 		}
-		
+
 		// Compute the unified diff for this edit
 		diffLines := computeLineDiff(oldString, newString)
-		
-		if i == 0 {
-			multiEditHTML.WriteString(`<div class="edit-item" style="padding-top: 0; margin-top: 0;">`)
-		} else {
-			multiEditHTML.WriteString(fmt.Sprintf(`<div class="edit-item" style="border-top: 1px solid #dee2e6; padding-top: 10px; margin-top: 10px;">`))
+
+		if i > 0 {
+			multiEditHTML.WriteString(`<div style="border-top: 1px solid #dee2e6; margin: 10px 0;"></div>`)
 		}
-		
+
 		multiEditHTML.WriteString(fmt.Sprintf(`<div style="color: #6c757d; font-size: 0.85em; margin-bottom: 5px;">Edit #%d`, i+1))
 		if replaceAll {
-			multiEditHTML.WriteString(` <span class="replace-all">(Replace All)</span>`)
+			multiEditHTML.WriteString(` <span style="background: #6c757d; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.9em;">(Replace All)</span>`)
 		}
 		multiEditHTML.WriteString(`</div>`)
-		
+
 		multiEditHTML.WriteString(`<div class="diff-content unified">`)
-		multiEditHTML.WriteString(`<pre class="diff-code">`)
-		
+		multiEditHTML.WriteString(`<div class="diff-code">`)
+
 		// Display the unified diff
-		for j, line := range diffLines {
+		for _, line := range diffLines {
 			var lineClass string
 			var prefix string
-			
+
 			switch line.Type {
 			case "removed":
 				lineClass = "line-removed"
@@ -275,21 +270,20 @@ func formatMultiEditToolInput(input map[string]interface{}) template.HTML {
 				lineClass = "line-unchanged"
 				prefix = " "
 			}
-			
-			multiEditHTML.WriteString(fmt.Sprintf(`<span class="diff-line %s"><span class="line-number">%3d</span><span class="line-prefix">%s</span> %s</span>`,
-				lineClass, line.LineNum, prefix, html.EscapeString(line.Content)))
-			
-			if j < len(diffLines)-1 {
-				multiEditHTML.WriteString("\n")
-			}
+
+			multiEditHTML.WriteString(fmt.Sprintf(`<div class="diff-line %s">`, lineClass))
+			multiEditHTML.WriteString(fmt.Sprintf(`<span class="line-number">%3d</span>`, line.LineNum))
+			multiEditHTML.WriteString(fmt.Sprintf(`<span class="line-prefix">%s</span>`, prefix))
+			multiEditHTML.WriteString(`<span class="line-content">`)
+			multiEditHTML.WriteString(html.EscapeString(line.Content))
+			multiEditHTML.WriteString(`</span>`)
+			multiEditHTML.WriteString(`</div>`)
 		}
-		
-		multiEditHTML.WriteString(`</pre>`)
+
 		multiEditHTML.WriteString(`</div>`)
 		multiEditHTML.WriteString(`</div>`)
 	}
-	
-	multiEditHTML.WriteString(`</div>`)
+
 	return template.HTML(multiEditHTML.String())
 }
 
@@ -303,7 +297,7 @@ func formatTodoWriteCompact(input map[string]interface{}) template.HTML {
 	// Build compact todo display
 	var todoHTML strings.Builder
 	todoHTML.WriteString(`<div class="todo-compact">`)
-	
+
 	// Count tasks by status
 	pending, inProgress, completed := 0, 0, 0
 	for _, todoInterface := range todos {
@@ -321,13 +315,13 @@ func formatTodoWriteCompact(input map[string]interface{}) template.HTML {
 			completed++
 		}
 	}
-	
+
 	// Add summary bar
 	total := pending + inProgress + completed
 	if total > 0 {
 		todoHTML.WriteString(`<div class="todo-compact-summary">`)
 		todoHTML.WriteString(`<span class="todo-compact-title">📋 Todo List</span>`)
-		
+
 		if completed > 0 {
 			todoHTML.WriteString(fmt.Sprintf(`<span class="todo-stat completed">✓ %d</span>`, completed))
 		}
@@ -338,7 +332,7 @@ func formatTodoWriteCompact(input map[string]interface{}) template.HTML {
 			todoHTML.WriteString(fmt.Sprintf(`<span class="todo-stat pending">○ %d</span>`, pending))
 		}
 		todoHTML.WriteString(`</div>`)
-		
+
 		// Show todo items
 		todoHTML.WriteString(`<div class="todo-compact-items">`)
 		for _, todoInterface := range todos {
@@ -346,11 +340,11 @@ func formatTodoWriteCompact(input map[string]interface{}) template.HTML {
 			if !ok {
 				continue
 			}
-			
+
 			content := GetStringValue(todo, "content")
 			status := GetStringValue(todo, "status")
 			priority := GetStringValue(todo, "priority")
-			
+
 			// Determine status icon
 			var statusIcon string
 			var statusClass string
@@ -365,7 +359,7 @@ func formatTodoWriteCompact(input map[string]interface{}) template.HTML {
 				statusIcon = "○"
 				statusClass = "pending"
 			}
-			
+
 			// Priority badge
 			var priorityBadge string
 			if priority == "high" {
@@ -373,14 +367,75 @@ func formatTodoWriteCompact(input map[string]interface{}) template.HTML {
 			} else if priority == "medium" {
 				priorityBadge = ` <span class="todo-priority-badge medium">M</span>`
 			}
-			
-			todoHTML.WriteString(fmt.Sprintf(`<div class="todo-compact-item %s"><span class="todo-icon">%s</span> %s%s</div>`, 
+
+			todoHTML.WriteString(fmt.Sprintf(`<div class="todo-compact-item %s"><span class="todo-icon">%s</span> %s%s</div>`,
 				statusClass, statusIcon, html.EscapeString(content), priorityBadge))
 		}
 		todoHTML.WriteString(`</div>`)
 	}
-	
+
 	todoHTML.WriteString(`</div>`)
 	return template.HTML(todoHTML.String())
 }
 
+// formatReadToolInput creates a file display for Read tool inputs
+func formatReadToolInput(input map[string]interface{}) template.HTML {
+	// For Read tool, we'll just return empty since we'll handle the display in the tool name/description
+	return template.HTML("")
+}
+
+// formatReadToolDescription creates a description for Read tool that includes the file path
+func formatReadToolDescription(input map[string]interface{}) string {
+	filePath := GetStringValue(input, "file_path")
+	
+	// Get optional offset and limit
+	offset := 0
+	limit := 0
+	if val, ok := input["offset"].(float64); ok {
+		offset = int(val)
+	}
+	if val, ok := input["limit"].(float64); ok {
+		limit = int(val)
+	}
+	
+	desc := filePath
+	
+	// Add line info if offset/limit specified
+	if offset > 0 || limit > 0 {
+		if offset > 0 && limit > 0 {
+			desc += fmt.Sprintf(" (lines %d-%d)", offset, offset+limit-1)
+		} else if offset > 0 {
+			desc += fmt.Sprintf(" (starting at line %d)", offset)
+		} else if limit > 0 {
+			desc += fmt.Sprintf(" (first %d lines)", limit)
+		}
+	}
+	
+	return desc
+}
+
+// formatEditToolDescription creates a description for Edit tool that includes the file path
+func formatEditToolDescription(input map[string]interface{}) string {
+	filePath := GetStringValue(input, "file_path")
+	replaceAll := false
+	if val, ok := input["replace_all"].(bool); ok {
+		replaceAll = val
+	}
+	
+	desc := filePath
+	if replaceAll {
+		desc += " (replace all)"
+	}
+	
+	return desc
+}
+
+// formatMultiEditToolDescription creates a description for MultiEdit tool that includes the file path
+func formatMultiEditToolDescription(input map[string]interface{}) string {
+	filePath := GetStringValue(input, "file_path")
+	edits, ok := input["edits"].([]interface{})
+	if ok && len(edits) > 0 {
+		return fmt.Sprintf("%s (%d edits)", filePath, len(edits))
+	}
+	return filePath
+}

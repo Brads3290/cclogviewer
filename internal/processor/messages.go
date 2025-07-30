@@ -2,46 +2,48 @@ package processor
 
 import (
 	"github.com/Brads3290/cclogviewer/internal/models"
-	"fmt"
-	"html"
-	"html/template"
 	"strings"
 )
 
-// ProcessUserMessage processes user messages and returns formatted HTML content
-func ProcessUserMessage(msg map[string]interface{}) template.HTML {
+// ProcessUserMessage processes user messages and returns raw content
+func ProcessUserMessage(msg map[string]interface{}) string {
 	content := GetStringValue(msg, "content")
-	
-	// Check if it's a tool result
+
+	// Check if content is an array
 	if contentArray, ok := msg["content"].([]interface{}); ok && len(contentArray) > 0 {
-		if toolResult, ok := contentArray[0].(map[string]interface{}); ok {
-			if toolType := GetStringValue(toolResult, "type"); toolType == "tool_result" {
-				// Handle different content types
+		if contentItem, ok := contentArray[0].(map[string]interface{}); ok {
+			contentType := GetStringValue(contentItem, "type")
+			
+			switch contentType {
+			case "text":
+				// Handle text content (including interrupted messages)
+				text := GetStringValue(contentItem, "text")
+				
+				
+				return text
+			case "tool_result":
+				// Handle tool result content
 				var toolContent string
-				if contentVal, ok := toolResult["content"].(string); ok {
+				if contentVal, ok := contentItem["content"].(string); ok {
 					toolContent = contentVal
-				} else if contentArray, ok := toolResult["content"].([]interface{}); ok && len(contentArray) > 0 {
+				} else if contentArray, ok := contentItem["content"].([]interface{}); ok && len(contentArray) > 0 {
 					// Handle array content (like from Task tool)
 					if textContent, ok := contentArray[0].(map[string]interface{}); ok {
 						toolContent = GetStringValue(textContent, "text")
 					}
 				}
-				
-				isError := GetBoolValue(toolResult, "is_error")
-				
-				if isError {
-					return template.HTML(fmt.Sprintf(`<div class="tool-result error">%s</div>`, html.EscapeString(toolContent)))
-				}
-				return template.HTML(fmt.Sprintf(`<div class="tool-result">%s</div>`, formatContent(toolContent)))
+				return toolContent
 			}
 		}
 	}
-	
-	return template.HTML(formatContent(content))
+
+	// Also check direct string content
+
+	return content
 }
 
-// ProcessAssistantMessage processes assistant messages and returns formatted HTML content and tool calls
-func ProcessAssistantMessage(msg map[string]interface{}) (template.HTML, []models.ToolCall) {
+// ProcessAssistantMessage processes assistant messages and returns raw content and tool calls
+func ProcessAssistantMessage(msg map[string]interface{}) (string, []models.ToolCall) {
 	var content strings.Builder
 	var toolCalls []models.ToolCall
 
@@ -49,12 +51,12 @@ func ProcessAssistantMessage(msg map[string]interface{}) (template.HTML, []model
 		for _, item := range contentArray {
 			if contentItem, ok := item.(map[string]interface{}); ok {
 				contentType := GetStringValue(contentItem, "type")
-				
+
 				switch contentType {
 				case "text":
 					text := GetStringValue(contentItem, "text")
 					if text != "" {
-						content.WriteString(formatContent(text))
+						content.WriteString(text)
 					}
 				case "tool_use":
 					tool := ProcessToolUse(contentItem)
@@ -64,23 +66,6 @@ func ProcessAssistantMessage(msg map[string]interface{}) (template.HTML, []model
 		}
 	}
 
-	return template.HTML(content.String()), toolCalls
+	return content.String(), toolCalls
 }
 
-func formatContent(content string) string {
-	// Escape HTML
-	content = html.EscapeString(content)
-	
-	// Convert newlines to <br>
-	content = strings.ReplaceAll(content, "\n", "<br>")
-	
-	// Wrap code blocks
-	content = strings.ReplaceAll(content, "```", "</code></pre>CODE_BLOCK_MARKER<pre><code>")
-	content = strings.ReplaceAll(content, "CODE_BLOCK_MARKER", "```")
-	
-	// Remove any empty pre/code tags at start/end
-	content = strings.TrimPrefix(content, "</code></pre>```")
-	content = strings.TrimSuffix(content, "```<pre><code>")
-	
-	return content
-}
