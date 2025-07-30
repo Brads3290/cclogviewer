@@ -43,32 +43,96 @@ const htmlTemplate = `<!DOCTYPE html>
             transition: all 0.2s ease;
         }
         
-        .entry.user {
-            border-left-color: #3498db;
-            background: #f0f7ff;
+        .entry {
             padding: 10px 15px;
             border-radius: 4px;
         }
         
-        .entry.assistant {
-            border-left-color: #27ae60;
-            background: #f0fff4;
-            padding: 10px 15px;
-            border-radius: 4px;
+        /* Color schemes for different depth levels */
+        /* Depth 1 - Root conversation: Blue for user, Green for assistant */
+        .entry.depth-1.user {
+            background: #e3f2fd;
+            border-left-color: #1976d2;
         }
         
-        .entry.sidechain {
-            opacity: 0.9;
+        .entry.depth-1.assistant {
+            background: #e8f5e9;
+            border-left-color: #388e3c;
         }
         
-        .entry.sidechain.user {
-            background: #f0fff4; /* Same green background as main assistant */
-            border-left-color: #27ae60; /* Green border like main assistant */
+        /* Depth 2 - Purple theme */
+        .entry.depth-2.user {
+            background: #f3e5f5;
+            border-left-color: #7b1fa2;
         }
         
-        .entry.sidechain.assistant {
-            background: #fff3cd; /* Yellow background for sub-agent */
-            border-left-color: #f39c12; /* Orange border for sub-agent */
+        .entry.depth-2.assistant {
+            background: #ede7f6;
+            border-left-color: #512da8;
+        }
+        
+        /* Depth 3 - Orange theme */
+        .entry.depth-3.user {
+            background: #fff3e0;
+            border-left-color: #f57c00;
+        }
+        
+        .entry.depth-3.assistant {
+            background: #fbe9e7;
+            border-left-color: #d84315;
+        }
+        
+        /* Depth 4 - Teal theme */
+        .entry.depth-4.user {
+            background: #e0f2f1;
+            border-left-color: #00796b;
+        }
+        
+        .entry.depth-4.assistant {
+            background: #e0f7fa;
+            border-left-color: #00838f;
+        }
+        
+        /* Depth 5 - Pink theme */
+        .entry.depth-5.user {
+            background: #fce4ec;
+            border-left-color: #c2185b;
+        }
+        
+        .entry.depth-5.assistant {
+            background: #f8bbd0;
+            border-left-color: #ad1457;
+        }
+        
+        /* Special styling: sidechain user messages use parent assistant colors */
+        .entry.sidechain.depth-2.user {
+            /* Use depth-1 assistant colors */
+            background: #e8f5e9;
+            border-left-color: #388e3c;
+        }
+        
+        .entry.sidechain.depth-3.user {
+            /* Use depth-2 assistant colors */
+            background: #ede7f6;
+            border-left-color: #512da8;
+        }
+        
+        .entry.sidechain.depth-4.user {
+            /* Use depth-3 assistant colors */
+            background: #fbe9e7;
+            border-left-color: #d84315;
+        }
+        
+        .entry.sidechain.depth-5.user {
+            /* Use depth-4 assistant colors */
+            background: #e0f7fa;
+            border-left-color: #00838f;
+        }
+        
+        .entry.sidechain.depth-1.user {
+            /* Use depth-5 assistant colors (wraps around) */
+            background: #f8bbd0;
+            border-left-color: #ad1457;
         }
         
         .task-entry .entry.sidechain {
@@ -91,21 +155,69 @@ const htmlTemplate = `<!DOCTYPE html>
             padding: 2px 8px;
             border-radius: 3px;
             font-size: 0.85em;
-        }
-        
-        .role.user {
-            background: #3498db;
             color: white;
         }
         
-        .role.assistant {
-            background: #27ae60;
-            color: white;
+        /* Role labels inherit colors from their depth */
+        .entry.depth-1 .role.user {
+            background: #1976d2;
         }
         
-        .role.subagent {
-            background: #f39c12;
-            color: white;
+        .entry.depth-1 .role.assistant {
+            background: #388e3c;
+        }
+        
+        .entry.depth-2 .role.user {
+            background: #7b1fa2;
+        }
+        
+        .entry.depth-2 .role.assistant,
+        .entry.depth-2 .role.subagent {
+            background: #512da8;
+        }
+        
+        .entry.depth-3 .role.user {
+            background: #f57c00;
+        }
+        
+        .entry.depth-3 .role.assistant,
+        .entry.depth-3 .role.subagent {
+            background: #d84315;
+        }
+        
+        .entry.depth-4 .role.user {
+            background: #00796b;
+        }
+        
+        .entry.depth-4 .role.assistant,
+        .entry.depth-4 .role.subagent {
+            background: #00838f;
+        }
+        
+        .entry.depth-5 .role.user {
+            background: #c2185b;
+        }
+        
+        .entry.depth-5 .role.assistant,
+        .entry.depth-5 .role.subagent {
+            background: #ad1457;
+        }
+        
+        /* Special case: sidechain user messages use parent assistant label colors */
+        .entry.sidechain.depth-2.user .role.assistant {
+            background: #388e3c; /* depth-1 assistant color */
+        }
+        
+        .entry.sidechain.depth-3.user .role.assistant {
+            background: #512da8; /* depth-2 assistant color */
+        }
+        
+        .entry.sidechain.depth-4.user .role.assistant {
+            background: #d84315; /* depth-3 assistant color */
+        }
+        
+        .entry.sidechain.depth-5.user .role.assistant {
+            background: #00838f; /* depth-4 assistant color */
         }
         
         .timestamp {
@@ -735,15 +847,17 @@ const htmlTemplate = `<!DOCTYPE html>
 
 {{define "entry"}}
 {{if or (ne .Content "") .ToolCalls}}{{/* Render if content is not empty OR has tool calls */}}
-<div class="entry {{.Type}}{{if .IsSidechain}} sidechain{{end}}" 
+<div class="entry {{.Type}} depth-{{mod (sub .Depth 1) 5 | add 1}}{{if .IsSidechain}} sidechain{{end}}" 
      data-debug-id="entry-{{shortUUID .UUID}}"
      data-uuid="{{.UUID}}"
      data-parent-uuid="{{.ParentUUID}}"
-     data-is-sidechain="{{.IsSidechain}}">
+     data-is-sidechain="{{.IsSidechain}}"
+     data-depth="{{.Depth}}"
+     data-color-depth="{{mod (sub .Depth 1) 5 | add 1}}">
     <div class="entry-header">
         {{if .IsSidechain}}
             {{if eq .Role "user"}}
-            <span class="role assistant">Assistant</span>
+            <span class="role assistant">Prompt</span>
             {{else if eq .Role "assistant"}}
             <span class="role subagent">Sub Agent</span>
             {{end}}

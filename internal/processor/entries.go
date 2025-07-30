@@ -302,6 +302,12 @@ func ProcessEntries(entries []models.LogEntry) []*models.ProcessedEntry {
 	// Link command stdout messages to their command messages
 	linkCommandOutputs(rootEntries)
 
+	// Set depth for all entries based on sidechain hierarchy
+	// Root conversation starts at depth 1
+	for _, entry := range rootEntries {
+		setEntryDepth(entry, 1)
+	}
+
 	return rootEntries
 }
 
@@ -452,11 +458,10 @@ func collectSidechainEntries(root *models.ProcessedEntry, entryMap map[string]*m
 	}
 
 	// Build the sidechain tree structure
-	var buildTree func(entry *models.ProcessedEntry, depth int, skipEntry bool)
-	buildTree = func(entry *models.ProcessedEntry, depth int, skipEntry bool) {
+	var buildTree func(entry *models.ProcessedEntry, skipEntry bool)
+	buildTree = func(entry *models.ProcessedEntry, skipEntry bool) {
 		// Add to result only if we're not skipping this entry
 		if !skipEntry {
-			entry.Depth = depth
 			result = append(result, entry)
 		}
 
@@ -472,11 +477,11 @@ func collectSidechainEntries(root *models.ProcessedEntry, entryMap map[string]*m
 			// Skip tool results that have been attached to tool calls when adding to result,
 			// but still process their children
 			shouldSkip := child.IsToolResult && attachedToolResults[child.UUID]
-			buildTree(child, depth+1, shouldSkip)
+			buildTree(child, shouldSkip)
 		}
 	}
 
-	buildTree(root, 0, false)
+	buildTree(root, false)
 	return result
 }
 
@@ -716,3 +721,32 @@ func linkCommandOutputs(entries []*models.ProcessedEntry) {
 		}
 	}
 }
+
+// setEntryDepth recursively sets the depth for entries based on sidechain hierarchy
+func setEntryDepth(entry *models.ProcessedEntry, depth int) {
+	// Set the depth for this entry
+	entry.Depth = depth
+	
+	// Process all tool calls
+	for i := range entry.ToolCalls {
+		toolCall := &entry.ToolCalls[i]
+		
+		// If this is a Task tool with sidechain entries, set their depth to current depth + 1
+		if toolCall.Name == "Task" && len(toolCall.TaskEntries) > 0 {
+			for _, taskEntry := range toolCall.TaskEntries {
+				setEntryDepth(taskEntry, depth+1)
+			}
+		}
+		
+		// Also set depth for tool results
+		if toolCall.Result != nil {
+			toolCall.Result.Depth = depth
+		}
+	}
+	
+	// Process children (though main conversation entries shouldn't have children)
+	for _, child := range entry.Children {
+		setEntryDepth(child, depth)
+	}
+}
+

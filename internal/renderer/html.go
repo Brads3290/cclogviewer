@@ -17,6 +17,15 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 		"mul": func(a, b int) int {
 			return a * b
 		},
+		"mod": func(a, b int) int {
+			return a % b
+		},
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"sub": func(a, b int) int {
+			return a - b
+		},
 		"formatNumber": func(n int) string {
 			if n < 1000 {
 				return fmt.Sprintf("%d", n)
