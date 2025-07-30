@@ -4,25 +4,56 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Brads3290/cclogviewer/internal/browser"
-	"github.com/Brads3290/cclogviewer/internal/debug"
+	debugpkg "github.com/Brads3290/cclogviewer/internal/debug"
 	"github.com/Brads3290/cclogviewer/internal/parser"
 	"github.com/Brads3290/cclogviewer/internal/processor"
 	"github.com/Brads3290/cclogviewer/internal/renderer"
 	"log"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"time"
 )
 
+var (
+	// Version can be set by ldflags during build
+	Version = ""
+	// BuildTime can be set by ldflags during build
+	BuildTime = ""
+)
+
 func main() {
 	var inputFile, outputFile string
-	var openBrowser bool
+	var openBrowser, showVersion bool
 	flag.StringVar(&inputFile, "input", "", "Input JSONL file path")
 	flag.StringVar(&outputFile, "output", "", "Output HTML file path (optional)")
 	flag.BoolVar(&openBrowser, "open", false, "Open the generated HTML file in browser")
-	flag.BoolVar(&debug.Enabled, "debug", false, "Enable debug logging")
+	flag.BoolVar(&debugpkg.Enabled, "debug", false, "Enable debug logging")
+	flag.BoolVar(&showVersion, "version", false, "Show version information")
 	flag.Parse()
+
+	if showVersion {
+		version := Version
+		if version == "" {
+			// Try to get version from build info
+			if info, ok := debug.ReadBuildInfo(); ok {
+				version = info.Main.Version
+				if version == "(devel)" {
+					version = "dev"
+				}
+			} else {
+				version = "unknown"
+			}
+		}
+		
+		fmt.Printf("cclogviewer version %s", version)
+		if BuildTime != "" {
+			fmt.Printf(" (built %s)", BuildTime)
+		}
+		fmt.Println()
+		os.Exit(0)
+	}
 
 	if inputFile == "" {
 		log.Fatal("Please provide an input file using -input flag")
@@ -46,7 +77,7 @@ func main() {
 
 	processed := processor.ProcessEntries(entries)
 
-	err = renderer.GenerateHTML(processed, outputFile, debug.Enabled)
+	err = renderer.GenerateHTML(processed, outputFile, debugpkg.Enabled)
 	if err != nil {
 		log.Fatalf("Error generating HTML: %v", err)
 	}
