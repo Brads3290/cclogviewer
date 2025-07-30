@@ -212,9 +212,10 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 		},
 	}
 
-	tmpl, err := template.New("main").Funcs(funcMap).Parse(htmlTemplate)
+	// Load templates from embedded filesystem
+	tmpl, err := LoadTemplates(funcMap)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to load templates: %w", err)
 	}
 
 	file, err := os.Create(outputFile)
@@ -232,7 +233,7 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 		Debug:   debugMode,
 	}
 
-	return tmpl.Execute(file, data)
+	return ExecuteTemplate(tmpl, file, data)
 }
 
 // convertANSIToHTML converts ANSI escape codes to HTML formatting

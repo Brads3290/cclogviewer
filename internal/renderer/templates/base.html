@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Log Viewer</title>
+    <style>
+        {{template "styles" .}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Claude Code Conversation Log</h1>
+        {{range .Entries}}
+            {{template "entry" .}}
+        {{end}}
+    </div>
+    
+    <script>
+        {{if $.Debug}}
+        const debugLog = (...args) => console.log('[DEBUG]', ...args);
+        {{else}}
+        const debugLog = () => {};
+        {{end}}
+        
+        {{template "scripts" .}}
+    </script>
+</body>
+</html>

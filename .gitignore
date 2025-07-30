@@ -4,6 +4,7 @@ bin/
 # Test outputs
 *.html
 !example.html
+!internal/renderer/templates/**/*.html
 
 # Go build artifacts
 *.exe

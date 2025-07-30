@@ -1,0 +1,75 @@
+{{define "tool-call"}}
+<div class="tool-call" 
+     data-debug-id="tool-{{.ID}}" 
+     data-tool-name="{{.Name}}"
+     data-parent-entry="tool-parent"
+     {{if .TaskEntries}}data-has-task-entries="true"{{end}}>
+    {{if eq .Name "Bash"}}
+    {{/* For Bash tool, show terminal directly without collapsible section */}}
+    <div class="bash-tool-container">
+        {{formatBashResult .}}
+        <div class="tool-id-copy" style="margin-top: 10px;">Tool ID: <code>{{.ID}}</code></div>
+    </div>
+    {{else}}
+    {{/* For other tools, keep the collapsible section */}}
+    <div class="tool-header">
+        <svg class="expand-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+        </svg>
+        <span class="tool-name">{{.Name}}</span>
+        {{if .Description}}
+        <span class="tool-description">{{.Description}}</span>
+        {{end}}
+        {{if .IsInterrupted}}
+        <span style="color: #dc3545; margin-left: 10px;" title="Request interrupted by user">⚠️ Interrupted</span>
+        {{end}}
+        {{if or .HasMissingResult .HasMissingSidechain}}
+        <span style="color: #ffc107; margin-left: 10px;" title="The log file may be incomplete">
+            ⚠️ {{if and .HasMissingResult .HasMissingSidechain}}The tool result and conversation are missing{{else if .HasMissingResult}}The tool result is missing{{else}}The conversation is missing{{end}}. The log file may be incomplete.
+        </span>
+        {{end}}
+        <span class="tool-id">{{.ID}}</span>
+    </div>
+    <div class="tool-details">
+        {{.Input}}
+        {{if .TaskEntries}}
+        {{$toolID := .ID}}
+        <div style="margin-top: 15px;">
+            {{range .TaskEntries}}
+                <div class="task-entry" data-debug-id="task-entry-{{shortUUID .UUID}}"  data-parent-tool="{{$toolID}}">
+                    {{template "entry" .}}
+                </div>
+            {{end}}
+        </div>
+        {{end}}
+        {{if .Result}}
+        {{if eq .Name "Read"}}
+            {{/* For Read tool, show the content inline */}}
+            {{formatReadResult .Result.Content}}
+        {{else if eq .Name "Bash"}}
+            {{/* For Bash tool, result is already integrated into the display */}}
+        {{else if and (or (eq .Name "Edit") (eq .Name "MultiEdit")) (not .Result.IsError)}}
+            {{/* For Edit/MultiEdit tools, only show result if it's an error */}}
+        {{else}}
+            {{/* For other tools or Edit/MultiEdit with errors, show collapsible result section */}}
+            <div class="tool-result-section" style="margin-top: 15px;">
+                <div class="result-header" style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 5px;">
+                    <svg class="result-expand-icon" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="transition: transform 0.2s;">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    <strong>Result</strong>
+                </div>
+                <div class="result-content" style="display: none; margin-top: 10px;">
+                    {{formatContent .Result.Content}}
+                </div>
+            </div>
+        {{end}}
+        {{end}}
+        <div class="tool-id-copy" style="margin-top: 10px;">Tool ID: <code>{{.ID}}</code></div>
+    </div>
+    {{end}}
+</div>
+{{if .CompactView}}
+{{.CompactView}}
+{{end}}
+{{end}}

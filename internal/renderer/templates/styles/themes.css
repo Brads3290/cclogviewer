@@ -1,0 +1,152 @@
+/* Color schemes for different depth levels */
+/* Depth 1 - Root conversation: Blue for user, Green for assistant */
+.entry.depth-1.user {
+    background: #e3f2fd;
+    border-left-color: #1976d2;
+}
+
+.entry.depth-1.assistant {
+    background: #e8f5e9;
+    border-left-color: #388e3c;
+}
+
+/* Depth 2 - Purple theme */
+.entry.depth-2.user {
+    background: #f3e5f5;
+    border-left-color: #7b1fa2;
+}
+
+.entry.depth-2.assistant {
+    background: #ede7f6;
+    border-left-color: #512da8;
+}
+
+/* Depth 3 - Orange theme */
+.entry.depth-3.user {
+    background: #fff3e0;
+    border-left-color: #f57c00;
+}
+
+.entry.depth-3.assistant {
+    background: #fbe9e7;
+    border-left-color: #d84315;
+}
+
+/* Depth 4 - Teal theme */
+.entry.depth-4.user {
+    background: #e0f2f1;
+    border-left-color: #00796b;
+}
+
+.entry.depth-4.assistant {
+    background: #e0f7fa;
+    border-left-color: #00838f;
+}
+
+/* Depth 5 - Pink theme */
+.entry.depth-5.user {
+    background: #fce4ec;
+    border-left-color: #c2185b;
+}
+
+.entry.depth-5.assistant {
+    background: #f8bbd0;
+    border-left-color: #ad1457;
+}
+
+/* Special styling: sidechain user messages use parent assistant colors */
+.entry.sidechain.depth-2.user {
+    /* Use depth-1 assistant colors */
+    background: #e8f5e9;
+    border-left-color: #388e3c;
+}
+
+.entry.sidechain.depth-3.user {
+    /* Use depth-2 assistant colors */
+    background: #ede7f6;
+    border-left-color: #512da8;
+}
+
+.entry.sidechain.depth-4.user {
+    /* Use depth-3 assistant colors */
+    background: #fbe9e7;
+    border-left-color: #d84315;
+}
+
+.entry.sidechain.depth-5.user {
+    /* Use depth-4 assistant colors */
+    background: #e0f7fa;
+    border-left-color: #00838f;
+}
+
+.entry.sidechain.depth-1.user {
+    /* Use depth-5 assistant colors (wraps around) */
+    background: #f8bbd0;
+    border-left-color: #ad1457;
+}
+
+.task-entry .entry.sidechain {
+    margin-left: 0; /* Override any margin for entries within task */
+}
+
+/* Role labels inherit colors from their depth */
+.entry.depth-1 .role.user {
+    background: #1976d2;
+}
+
+.entry.depth-1 .role.assistant {
+    background: #388e3c;
+}
+
+.entry.depth-2 .role.user {
+    background: #7b1fa2;
+}
+
+.entry.depth-2 .role.assistant,
+.entry.depth-2 .role.subagent {
+    background: #512da8;
+}
+
+.entry.depth-3 .role.user {
+    background: #f57c00;
+}
+
+.entry.depth-3 .role.assistant,
+.entry.depth-3 .role.subagent {
+    background: #d84315;
+}
+
+.entry.depth-4 .role.user {
+    background: #00796b;
+}
+
+.entry.depth-4 .role.assistant,
+.entry.depth-4 .role.subagent {
+    background: #00838f;
+}
+
+.entry.depth-5 .role.user {
+    background: #c2185b;
+}
+
+.entry.depth-5 .role.assistant,
+.entry.depth-5 .role.subagent {
+    background: #ad1457;
+}
+
+/* Special case: sidechain user messages use parent assistant label colors */
+.entry.sidechain.depth-2.user .role.assistant {
+    background: #388e3c; /* depth-1 assistant color */
+}
+
+.entry.sidechain.depth-3.user .role.assistant {
+    background: #512da8; /* depth-2 assistant color */
+}
+
+.entry.sidechain.depth-4.user .role.assistant {
+    background: #d84315; /* depth-3 assistant color */
+}
+
+.entry.sidechain.depth-5.user .role.assistant {
+    background: #00838f; /* depth-4 assistant color */
+}

@@ -38,17 +38,6 @@ build: $(BUILD_DIR)
 build-release: $(BUILD_DIR)
 	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) -v ./cmd/cclogviewer
 
-# Run the application with example
-run: build
-	./$(BUILD_DIR)/$(BINARY_NAME) -input example.jsonl
-
-# Run quick view (auto-open)
-run-quick: build
-	./$(BUILD_DIR)/$(BINARY_NAME) -input example.jsonl
-
-# Run with specific output
-run-output: build
-	./$(BUILD_DIR)/$(BINARY_NAME) -input example.jsonl -output test_output.html -open
 
 # Install the binary
 install: build
@@ -111,9 +100,6 @@ release: build-all
 help:
 	@echo "Available targets:"
 	@echo "  make build          - Build the binary"
-	@echo "  make run            - Build and run with example file"
-	@echo "  make run-quick      - Build and run with auto-open"
-	@echo "  make run-output     - Build and run with specific output"
 	@echo "  make install        - Install binary to $(INSTALL_DIR)"
 	@echo "  make uninstall      - Remove binary from $(INSTALL_DIR)"
 	@echo "  make clean          - Clean build artifacts"
@@ -126,4 +112,4 @@ help:
 	@echo "Installation prefix can be changed with PREFIX:"
 	@echo "  make install PREFIX=/opt/local"
 
-.PHONY: build build-release run run-quick run-output install uninstall clean deps fmt lint build-all build-linux build-darwin build-windows release help
+.PHONY: build build-release install uninstall clean deps fmt lint build-all build-linux build-darwin build-windows release help

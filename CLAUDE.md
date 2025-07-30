@@ -17,10 +17,8 @@ make build-all              # Build for all platforms (Linux, Darwin, Windows)
 
 ### Running/Testing
 ```bash
-make run                     # Build and run with example.jsonl  
-make run-quick              # Build and run with auto-open
-make run-output             # Build and run with specific output file
 go run cmd/cclogviewer/main.go -input file.jsonl    # Run directly with Go
+./bin/cclogviewer -input file.jsonl                 # Run built binary
 ```
 
 ### Code Quality
@@ -51,7 +49,11 @@ The codebase follows a clean architecture pattern with clear separation of conce
 - **internal/models/**: Data structures for log entries and tool calls  
 - **internal/parser/**: JSONL file parsing with configurable buffer sizes for large files
 - **internal/processor/**: Transforms raw log entries into hierarchical structures, handles tool call matching and sidechain conversation grouping
-- **internal/renderer/**: HTML generation with embedded templates and CSS
+- **internal/renderer/**: HTML generation with modular templates
+  - **templates/**: Base HTML structure and template definitions
+  - **templates/styles/**: Modular CSS files (main.css, themes.css, components.css)
+  - **templates/scripts/**: JavaScript functionality (main.js)
+  - **templates/partials/**: Reusable HTML components (entry.html, tool-call.html)
 - **internal/browser/**: Cross-platform browser opening functionality
 
 The processing pipeline:
@@ -62,6 +64,7 @@ The processing pipeline:
 
 Key architectural decisions:
 - Uses Go's html/template for safe HTML generation
-- Embeds CSS directly in HTML output for single-file distribution
+- Templates are embedded at compile time using Go 1.16+ embed directive
+- Modular template structure for maintainability and future enhancements
 - Processes entire file in memory for simplicity (suitable for typical log sizes)
 - Chronological display with visual hierarchy for nested conversations
