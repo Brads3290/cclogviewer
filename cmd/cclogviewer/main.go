@@ -18,7 +18,7 @@ import (
 
 var (
 	// Version can be set by ldflags during build
-	Version = ""
+	Version = "1.1.0"
 	// BuildTime can be set by ldflags during build
 	BuildTime = ""
 )
