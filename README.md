@@ -2,6 +2,8 @@
 
 Converts Claude Code JSONL log files into interactive HTML.
 
+![Demo](docs/assets/demo.gif)
+
 ## Installation
 
 Requires Go 1.21 or later. Install Go from https://go.dev/
