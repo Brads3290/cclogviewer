@@ -1,0 +1,2 @@
+{"uuid":"msg-001","type":"message","timestamp":"2024-01-01T10:00:00Z","message":{"role":"user","content":"Test with emojis 🚀 🎉 and unicode: αβγδε"}}
+{"uuid":"msg-002","type":"message","timestamp":"2024-01-01T10:00:01Z","message":{"role":"assistant","content":"I see the emojis 🚀 🎉 and Greek letters: αβγδε. Unicode support is working!"}}

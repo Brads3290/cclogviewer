@@ -1,0 +1,5 @@
+{"uuid":"msg-001","type":"message","timestamp":"2024-01-01T10:00:00Z","message":{"role":"user","content":"Valid line"}}
+{invalid json here
+{"uuid":"msg-002","type":"message","timestamp":"2024-01-01T10:00:01Z","message":{"role":"assistant","content":[{"type":"text","text":"Another valid line"}]}}
+{"uuid":"msg-003","type":"message",incomplete
+{"uuid":"msg-004","type":"message","timestamp":"2024-01-01T10:00:02Z","message":{"role":"user","content":"Final valid line"}}

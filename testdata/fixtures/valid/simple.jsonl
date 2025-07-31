@@ -1,0 +1,4 @@
+{"uuid":"msg-001","type":"message","timestamp":"2024-01-01T10:00:00Z","message":{"role":"user","content":"Hello"}}
+{"uuid":"msg-002","type":"message","timestamp":"2024-01-01T10:00:01Z","message":{"role":"assistant","content":[{"type":"text","text":"Hi there! How can I help you today?"}]}}
+{"uuid":"msg-003","type":"message","timestamp":"2024-01-01T10:00:05Z","message":{"role":"user","content":"What's the weather like?"}}
+{"uuid":"msg-004","type":"message","timestamp":"2024-01-01T10:00:06Z","message":{"role":"assistant","content":[{"type":"text","text":"I don't have access to real-time weather data. You might want to check a weather website or app for current conditions."}]}}

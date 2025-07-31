@@ -59,6 +59,7 @@ clean:
 	rm -rf $(BUILD_DIR)
 	rm -f test_output.html
 	rm -f example_*.html
+	rm -f coverage.out coverage.html
 
 # Download dependencies
 deps:
@@ -72,6 +73,31 @@ fmt:
 # Run linter (requires golangci-lint)
 lint:
 	golangci-lint run
+
+# Run tests
+test:
+	$(GOTEST) -v ./...
+
+# Run tests with coverage
+test-coverage:
+	$(GOTEST) -coverprofile=coverage.out ./...
+	$(GOCMD) tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
+
+# Show coverage report in terminal
+test-coverage-report: test-coverage
+	@$(GOCMD) tool cover -func=coverage.out | grep total | awk '{print "Total Coverage: " $$3}'
+
+# Run integration tests
+test-integration:
+	$(GOTEST) -tags=integration -v ./...
+
+# Run benchmarks
+benchmark:
+	$(GOTEST) -bench=. -benchmem ./...
+
+# Run all tests (unit + integration)
+test-all: test test-integration
 
 # Build for multiple platforms
 build-all: build-linux build-darwin build-windows
@@ -106,10 +132,15 @@ help:
 	@echo "  make deps           - Download and tidy dependencies"
 	@echo "  make fmt            - Format Go code"
 	@echo "  make lint           - Run linter (requires golangci-lint)"
+	@echo "  make test           - Run unit tests"
+	@echo "  make test-coverage  - Run tests with coverage report"
+	@echo "  make test-integration - Run integration tests"
+	@echo "  make test-all       - Run all tests"
+	@echo "  make benchmark      - Run benchmarks"
 	@echo "  make build-all      - Build for all platforms"
 	@echo "  make release        - Create release archives"
 	@echo ""
 	@echo "Installation prefix can be changed with PREFIX:"
 	@echo "  make install PREFIX=/opt/local"
 
-.PHONY: build build-release install uninstall clean deps fmt lint build-all build-linux build-darwin build-windows release help
+.PHONY: build build-release install uninstall clean deps fmt lint test test-coverage test-coverage-report test-integration benchmark test-all build-all build-linux build-darwin build-windows release help

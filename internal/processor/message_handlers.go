@@ -19,7 +19,13 @@ var messageHandlers = map[string]MessageHandler{
 func processMessage(processed *models.ProcessedEntry, msg map[string]interface{}, entry models.LogEntry) error {
 	processed.Role = utils.ExtractString(msg, "role")
 
-	if handler, ok := messageHandlers[processed.Type]; ok {
+	// For "message" type, use the role to determine handler
+	handlerKey := processed.Type
+	if processed.Type == TypeMessage && processed.Role != "" {
+		handlerKey = processed.Role
+	}
+
+	if handler, ok := messageHandlers[handlerKey]; ok {
 		return handler(processed, msg, entry)
 	}
 
