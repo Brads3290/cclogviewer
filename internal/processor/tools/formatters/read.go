@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/utils"
 )
 
@@ -15,7 +16,7 @@ type ReadFormatter struct {
 // NewReadFormatter creates a new Read formatter
 func NewReadFormatter() *ReadFormatter {
 	return &ReadFormatter{
-		BaseFormatter: BaseFormatter{toolName: "Read"},
+		BaseFormatter: BaseFormatter{toolName: constants.ToolNameRead},
 	}
 }
 

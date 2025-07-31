@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/brads3290/cclogviewer/internal/browser"
+	"github.com/brads3290/cclogviewer/internal/constants"
 	debugpkg "github.com/brads3290/cclogviewer/internal/debug"
 	"github.com/brads3290/cclogviewer/internal/parser"
 	"github.com/brads3290/cclogviewer/internal/processor"
@@ -18,7 +19,7 @@ import (
 
 var (
 	// Version can be set by ldflags during build
-	Version = "1.1.0"
+	Version = constants.DefaultVersion
 	// BuildTime can be set by ldflags during build
 	BuildTime = ""
 )
@@ -39,11 +40,11 @@ func main() {
 			// Try to get version from build info
 			if info, ok := debug.ReadBuildInfo(); ok {
 				version = info.Main.Version
-				if version == "(devel)" {
-					version = "dev"
+				if version == constants.DevelopmentVersionString {
+					version = constants.DevVersionString
 				}
 			} else {
-				version = "unknown"
+				version = constants.UnknownVersionString
 			}
 		}
 
@@ -65,8 +66,8 @@ func main() {
 		// Generate unique filename based on input file and timestamp
 		baseName := filepath.Base(inputFile)
 		baseName = strings.TrimSuffix(baseName, filepath.Ext(baseName))
-		timestamp := time.Now().Format("20060102-150405")
-		outputFile = filepath.Join(os.TempDir(), fmt.Sprintf("cclog-%s-%s.html", baseName, timestamp))
+		timestamp := time.Now().Format(constants.TempFileTimestampFormat)
+		outputFile = filepath.Join(os.TempDir(), fmt.Sprintf(constants.TempFileNameFormat, baseName, timestamp))
 		autoOpen = true
 	}
 

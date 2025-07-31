@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/processor/tools"
 	"github.com/brads3290/cclogviewer/internal/utils"
 )
@@ -19,7 +20,7 @@ var _ tools.BashFormatter = (*BashFormatter)(nil)
 // NewBashFormatter creates a new Bash formatter
 func NewBashFormatter() *BashFormatter {
 	return &BashFormatter{
-		BaseFormatter: BaseFormatter{toolName: "Bash"},
+		BaseFormatter: BaseFormatter{toolName: constants.ToolNameBash},
 	}
 }
 
@@ -42,7 +43,7 @@ func (f *BashFormatter) FormatInputWithCWD(data map[string]interface{}, cwd stri
 	// Header with terminal icon and description
 	html += `<div class="bash-header">`
 	html += `<span class="terminal-icon">💻</span>`
-	html += `<span class="command-label">Bash</span>`
+	html += fmt.Sprintf(`<span class="command-label">%s</span>`, constants.ToolNameBash)
 	if description != "" {
 		html += fmt.Sprintf(`<span class="description">%s</span>`, f.escapeHTML(description))
 	}

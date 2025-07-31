@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/models"
 	"github.com/brads3290/cclogviewer/internal/utils"
 	"strings"
@@ -16,12 +17,12 @@ func ProcessUserMessage(msg map[string]interface{}) string {
 			contentType := utils.ExtractString(contentItem, "type")
 
 			switch contentType {
-			case ContentTypeText:
+			case constants.ContentTypeText:
 				// Handle text content (including interrupted messages)
 				text := utils.ExtractString(contentItem, "text")
 
 				return text
-			case ContentTypeToolResult:
+			case constants.ContentTypeToolResult:
 				// Handle tool result content
 				var toolContent string
 				if contentVal, ok := contentItem["content"].(string); ok {
@@ -53,12 +54,12 @@ func ProcessAssistantMessage(msg map[string]interface{}, cwd string) (string, []
 				contentType := utils.ExtractString(contentItem, "type")
 
 				switch contentType {
-				case ContentTypeText:
+				case constants.ContentTypeText:
 					text := utils.ExtractString(contentItem, "text")
 					if text != "" {
 						content.WriteString(text)
 					}
-				case ContentTypeToolUse:
+				case constants.ContentTypeToolUse:
 					tool := ProcessToolUse(contentItem)
 					tool.CWD = cwd
 					toolCalls = append(toolCalls, tool)

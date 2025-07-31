@@ -2,8 +2,8 @@ package renderer
 
 import (
 	"fmt"
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/models"
-	"github.com/brads3290/cclogviewer/internal/processor"
 	"html"
 	"html/template"
 	"strings"
@@ -20,7 +20,7 @@ func NewBashResultFormatter() *BashResultFormatter {
 // Format formats a bash tool call result into HTML
 func (f *BashResultFormatter) Format(toolCall interface{}) template.HTML {
 	tc, ok := toolCall.(models.ToolCall)
-	if !ok || tc.Name != "Bash" {
+	if !ok || tc.Name != constants.ToolNameBash {
 		return ""
 	}
 
@@ -111,7 +111,7 @@ func (f *BashResultFormatter) renderOutput(result *strings.Builder, tc models.To
 // processOutput processes the output content and determines if it's long
 func (f *BashResultFormatter) processOutput(output string) (lines []string, isLong bool) {
 	lines = strings.Split(output, "\n")
-	isLong = len(lines) > processor.BashOutputCollapseThreshold
+	isLong = len(lines) > constants.BashOutputCollapseThreshold
 	return
 }
 
@@ -120,7 +120,7 @@ func (f *BashResultFormatter) renderCollapsibleOutput(result *strings.Builder, l
 	result.WriteString(`<div class="bash-output" style="position: relative;">`)
 
 	// First 20 lines always visible
-	visibleLines := lines[:processor.BashOutputCollapseThreshold]
+	visibleLines := lines[:constants.BashOutputCollapseThreshold]
 	convertedLines := f.convertLinesToHTML(visibleLines)
 
 	for i, line := range convertedLines {
@@ -132,7 +132,7 @@ func (f *BashResultFormatter) renderCollapsibleOutput(result *strings.Builder, l
 
 	// Hidden lines
 	result.WriteString(`<div class="bash-more-content" style="display: none;">`)
-	hiddenLines := lines[processor.BashOutputCollapseThreshold:]
+	hiddenLines := lines[constants.BashOutputCollapseThreshold:]
 	convertedHiddenLines := f.convertLinesToHTML(hiddenLines)
 
 	for _, line := range convertedHiddenLines {

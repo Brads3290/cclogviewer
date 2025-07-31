@@ -3,6 +3,7 @@ package processor
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/debug"
 	"github.com/brads3290/cclogviewer/internal/models"
 	"log"
@@ -41,7 +42,7 @@ func (s *SidechainProcessor) ProcessSidechains(entries []*models.ProcessedEntry,
 
 	// Look through tool calls to match Task tools with their sidechains
 	for _, entry := range originalEntries {
-		if entry.Type == TypeAssistant {
+		if entry.Type == constants.TypeAssistant {
 			processed := entryMap[entry.UUID]
 
 			if debug.Enabled && len(processed.ToolCalls) > 0 {
@@ -51,7 +52,7 @@ func (s *SidechainProcessor) ProcessSidechains(entries []*models.ProcessedEntry,
 
 			for i := range processed.ToolCalls {
 				toolCall := &processed.ToolCalls[i]
-				if toolCall.Name == ToolNameTask {
+				if toolCall.Name == constants.TaskToolName {
 					ctx := &TaskMatchContext{
 						ToolCall:          toolCall,
 						Entry:             &entry,
@@ -232,7 +233,7 @@ func (s *SidechainProcessor) extractTextFromContent(content []interface{}) (stri
 
 // canCheckPrefixMatch checks if both strings are long enough for prefix matching
 func (s *SidechainProcessor) canCheckPrefixMatch(str1, str2 string) bool {
-	return len(str1) > MinTextLengthForPrefixMatch && len(str2) > MinTextLengthForPrefixMatch
+	return len(str1) > constants.MinTextLengthForPrefixMatch && len(str2) > constants.MinTextLengthForPrefixMatch
 }
 
 // hasPrefixMatch checks if either string is a prefix of the other
@@ -282,7 +283,7 @@ func (s *SidechainProcessor) findBestMatchingSidechain(
 		}
 
 		// If we have a perfect match (both prompt and result), we can stop looking
-		if score == 2 {
+		if score == constants.PerfectMatchScore {
 			break
 		}
 	}

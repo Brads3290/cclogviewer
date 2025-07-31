@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/utils"
 )
 
@@ -15,7 +16,7 @@ type WriteFormatter struct {
 // NewWriteFormatter creates a new Write formatter
 func NewWriteFormatter() *WriteFormatter {
 	return &WriteFormatter{
-		BaseFormatter: BaseFormatter{toolName: "Write"},
+		BaseFormatter: BaseFormatter{toolName: constants.ToolNameWrite},
 	}
 }
 

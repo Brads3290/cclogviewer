@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/utils"
 )
 
@@ -15,7 +16,7 @@ type TodoWriteFormatter struct {
 // NewTodoWriteFormatter creates a new TodoWrite formatter
 func NewTodoWriteFormatter() *TodoWriteFormatter {
 	return &TodoWriteFormatter{
-		BaseFormatter: BaseFormatter{toolName: "TodoWrite"},
+		BaseFormatter: BaseFormatter{toolName: constants.ToolNameTodoWrite},
 	}
 }
 

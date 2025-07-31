@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"strings"
 
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/processor/tools/diff"
 	"github.com/brads3290/cclogviewer/internal/utils"
 )
@@ -17,7 +18,7 @@ type MultiEditFormatter struct {
 // NewMultiEditFormatter creates a new MultiEdit formatter
 func NewMultiEditFormatter() *MultiEditFormatter {
 	return &MultiEditFormatter{
-		BaseFormatter: BaseFormatter{toolName: "MultiEdit"},
+		BaseFormatter: BaseFormatter{toolName: constants.ToolNameMultiEdit},
 	}
 }
 

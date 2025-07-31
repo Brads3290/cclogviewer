@@ -3,9 +3,9 @@ package parser
 import (
 	"bufio"
 	"encoding/json"
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/debug"
 	"github.com/brads3290/cclogviewer/internal/models"
-	"github.com/brads3290/cclogviewer/internal/processor"
 	"log"
 	"os"
 )
@@ -21,8 +21,8 @@ func ReadJSONLFile(filename string) ([]models.LogEntry, error) {
 	var entries []models.LogEntry
 	scanner := bufio.NewScanner(file)
 	// Increase buffer size for large lines
-	buf := make([]byte, 0, processor.DefaultBufferSize)
-	scanner.Buffer(buf, processor.MaxLineSize)
+	buf := make([]byte, 0, constants.DefaultScannerBufferSize)
+	scanner.Buffer(buf, constants.MaxJSONLLineSize)
 
 	lineNum := 0
 	for scanner.Scan() {
@@ -36,7 +36,7 @@ func ReadJSONLFile(filename string) ([]models.LogEntry, error) {
 		}
 
 		// Skip summary messages
-		if entry.Type == "summary" {
+		if entry.Type == constants.EntryTypeSummary {
 			if debug.Enabled {
 				log.Printf("Skipping summary message at line %d", lineNum)
 			}

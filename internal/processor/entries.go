@@ -2,6 +2,7 @@ package processor
 
 import (
 	"encoding/json"
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/models"
 	"github.com/brads3290/cclogviewer/internal/utils"
 	"strings"
@@ -44,7 +45,7 @@ func checkMissingToolResults(entry *models.ProcessedEntry) {
 		}
 
 		// For Task tools, also check if sidechain is missing
-		if toolCall.Name == ToolNameTask && len(toolCall.TaskEntries) == 0 {
+		if toolCall.Name == constants.TaskToolName && len(toolCall.TaskEntries) == 0 {
 			toolCall.HasMissingSidechain = true
 		}
 
@@ -169,7 +170,7 @@ func formatTimestamp(ts string) string {
 func isToolResult(msg map[string]interface{}) bool {
 	if content, ok := msg["content"].([]interface{}); ok && len(content) > 0 {
 		if toolResult, ok := content[0].(map[string]interface{}); ok {
-			return utils.ExtractString(toolResult, "type") == TypeToolResult
+			return utils.ExtractString(toolResult, "type") == constants.TypeToolResult
 		}
 	}
 	return false
@@ -187,7 +188,7 @@ func extractContent(entry *models.ProcessedEntry) string {
 // getFirstUserMessage finds the first user message in a sidechain conversation
 func getFirstUserMessage(root *models.ProcessedEntry, entryMap map[string]*models.ProcessedEntry) string {
 	// First check if root itself is a user message
-	if root.Role == RoleUser {
+	if root.Role == constants.RoleUser {
 		return extractContent(root)
 	}
 
@@ -196,7 +197,7 @@ func getFirstUserMessage(root *models.ProcessedEntry, entryMap map[string]*model
 	findFirstUser = func(entry *models.ProcessedEntry) string {
 		// Check children first (in order)
 		for _, child := range entry.Children {
-			if child.Role == RoleUser {
+			if child.Role == constants.RoleUser {
 				return extractContent(child)
 			}
 		}
@@ -210,7 +211,7 @@ func getFirstUserMessage(root *models.ProcessedEntry, entryMap map[string]*model
 
 		// Also check entries that have this as parent
 		for _, e := range entryMap {
-			if e.ParentUUID == entry.UUID && e.IsSidechain && e.Role == RoleUser {
+			if e.ParentUUID == entry.UUID && e.IsSidechain && e.Role == constants.RoleUser {
 				return extractContent(e)
 			}
 		}
@@ -229,7 +230,7 @@ func getLastAssistantMessage(root *models.ProcessedEntry, entryMap map[string]*m
 	var findLastAssistant func(entry *models.ProcessedEntry)
 	findLastAssistant = func(entry *models.ProcessedEntry) {
 		// Check if this is an assistant message
-		if entry.Role == RoleAssistant && !entry.IsToolResult {
+		if entry.Role == constants.RoleAssistant && !entry.IsToolResult {
 			// Parse timestamp
 			if t, err := time.Parse(time.RFC3339, entry.RawTimestamp); err == nil {
 				if lastAssistantContent == "" || t.After(lastAssistantTime) {
@@ -300,8 +301,8 @@ func extractXMLContent(text, tag string) string {
 // isCommandWithStdout checks if current entry is a command message and next entry contains stdout
 func isCommandWithStdout(current, next *models.ProcessedEntry) bool {
 	return current.IsCommandMessage &&
-		next.Role == RoleUser &&
-		strings.Contains(next.Content, "<"+TagCommandStdout+">")
+		next.Role == constants.RoleUser &&
+		strings.Contains(next.Content, "<"+constants.TagCommandStdout+">")
 }
 
 // linkCommandOutputs merges adjacent command and stdout messages for cleaner display.
@@ -313,7 +314,7 @@ func linkCommandOutputs(entries []*models.ProcessedEntry) {
 		// If current is a command message and next contains stdout
 		if isCommandWithStdout(current, next) {
 			// Extract the stdout content
-			current.CommandOutput = extractXMLContent(next.Content, TagCommandStdout)
+			current.CommandOutput = extractXMLContent(next.Content, constants.TagCommandStdout)
 			// Mark the next entry for removal
 			next.Content = ""
 		}

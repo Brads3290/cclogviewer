@@ -3,6 +3,7 @@ package formatters
 import (
 	"html/template"
 
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/processor/tools/diff"
 	"github.com/brads3290/cclogviewer/internal/utils"
 )
@@ -15,7 +16,7 @@ type EditFormatter struct {
 // NewEditFormatter creates a new Edit formatter
 func NewEditFormatter() *EditFormatter {
 	return &EditFormatter{
-		BaseFormatter: BaseFormatter{toolName: "Edit"},
+		BaseFormatter: BaseFormatter{toolName: constants.ToolNameEdit},
 	}
 }
 

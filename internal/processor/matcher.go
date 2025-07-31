@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/models"
 	"strings"
 )
@@ -47,7 +48,7 @@ func (m *ToolCallMatcher) MatchToolCalls(entries []*models.ProcessedEntry) error
 			if toolCall != nil {
 				toolCall.Result = entry
 				// Check if the tool was interrupted
-				if entry.IsError && strings.Contains(strings.ToLower(entry.Content), "request interrupted by user") {
+				if entry.IsError && strings.Contains(strings.ToLower(entry.Content), constants.UserInterruptionPattern) {
 					toolCall.IsInterrupted = true
 				}
 			}

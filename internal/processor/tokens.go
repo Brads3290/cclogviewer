@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"strings"
 	"unicode"
 )
@@ -15,7 +16,7 @@ func EstimateTokens(text string) int {
 
 	// On average, 1 word ≈ 1.3 tokens for English text
 	// This is a rough approximation that works reasonably well
-	return int(float64(words) * 1.3)
+	return int(float64(words) * constants.EnglishTokenToWordRatio)
 }
 
 func stripHTMLTags(html string) string {

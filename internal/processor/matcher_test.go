@@ -3,6 +3,7 @@ package processor
 import (
 	"testing"
 
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/models"
 )
 
@@ -11,22 +12,22 @@ func TestMatchToolCalls(t *testing.T) {
 	entries := []*models.ProcessedEntry{
 		{
 			UUID: "msg-1",
-			Role: RoleAssistant,
+			Role: constants.RoleAssistant,
 			ToolCalls: []models.ToolCall{
-				{ID: "tool-1", Name: ToolNameBash},
-				{ID: "tool-2", Name: ToolNameEdit},
+				{ID: "tool-1", Name: constants.ToolNameBash},
+				{ID: "tool-2", Name: constants.ToolNameEdit},
 			},
 		},
 		{
 			UUID:         "result-1",
-			Role:         RoleUser,
+			Role:         constants.RoleUser,
 			IsToolResult: true,
 			ToolResultID: "tool-1",
 			Content:      "Command output",
 		},
 		{
 			UUID:         "result-2",
-			Role:         RoleUser,
+			Role:         constants.RoleUser,
 			IsToolResult: true,
 			ToolResultID: "tool-2",
 			Content:      "Edit successful",

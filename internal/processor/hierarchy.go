@@ -1,6 +1,9 @@
 package processor
 
-import "github.com/brads3290/cclogviewer/internal/models"
+import (
+	"github.com/brads3290/cclogviewer/internal/constants"
+	"github.com/brads3290/cclogviewer/internal/models"
+)
 
 // HierarchyBuilder builds conversation hierarchy and calculates depths.
 type HierarchyBuilder struct{}
@@ -15,7 +18,7 @@ func (h *HierarchyBuilder) BuildHierarchy(entries []*models.ProcessedEntry) erro
 	// Set depth for all entries based on sidechain hierarchy
 	// Root conversation starts at depth 1
 	for _, entry := range entries {
-		h.setEntryDepth(entry, 1)
+		h.setEntryDepth(entry, constants.RootConversationDepth)
 	}
 
 	return nil
@@ -31,7 +34,7 @@ func (h *HierarchyBuilder) setEntryDepth(entry *models.ProcessedEntry, depth int
 		toolCall := &entry.ToolCalls[i]
 
 		// If this is a Task tool with sidechain entries, set their depth to current depth + 1
-		if toolCall.Name == ToolNameTask && len(toolCall.TaskEntries) > 0 {
+		if toolCall.Name == constants.TaskToolName && len(toolCall.TaskEntries) > 0 {
 			for _, taskEntry := range toolCall.TaskEntries {
 				h.setEntryDepth(taskEntry, depth+1)
 			}

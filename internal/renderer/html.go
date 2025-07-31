@@ -2,8 +2,8 @@ package renderer
 
 import (
 	"fmt"
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/models"
-	"github.com/brads3290/cclogviewer/internal/processor"
 	"github.com/brads3290/cclogviewer/internal/renderer/ansi"
 	"github.com/brads3290/cclogviewer/internal/renderer/builders"
 	"html"
@@ -32,14 +32,14 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 			return a - b
 		},
 		"formatNumber": func(n int) string {
-			if n < processor.ThousandSeparatorThreshold {
+			if n < constants.NumberFormattingThreshold {
 				return fmt.Sprintf("%d", n)
 			}
 			// Format with thousands separators
 			str := fmt.Sprintf("%d", n)
 			result := ""
 			for i, digit := range str {
-				if i > 0 && (len(str)-i)%3 == 0 {
+				if i > 0 && (len(str)-i)%constants.ThousandsSeparatorInterval == 0 {
 					result += ","
 				}
 				result += string(digit)
@@ -69,8 +69,8 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 		},
 		"shortUUID": func(uuid string) string {
 			// Return first N characters of UUID for brevity
-			if len(uuid) >= processor.ShortUUIDLength {
-				return uuid[:processor.ShortUUIDLength]
+			if len(uuid) >= constants.ShortUUIDLength {
+				return uuid[:constants.ShortUUIDLength]
 			}
 			return uuid
 		},

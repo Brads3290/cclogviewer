@@ -3,6 +3,7 @@ package renderer
 import (
 	"embed"
 	"fmt"
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"html/template"
 	"io"
 	"io/fs"
@@ -28,7 +29,7 @@ func LoadTemplates(funcMap template.FuncMap) (*template.Template, error) {
 		}
 
 		// Only process .html files
-		if !strings.HasSuffix(path, ".html") {
+		if !strings.HasSuffix(path, constants.HTMLFileExtension) {
 			return nil
 		}
 
@@ -39,9 +40,9 @@ func LoadTemplates(funcMap template.FuncMap) (*template.Template, error) {
 		}
 
 		// Get the template name (without templates/ prefix and extension)
-		name := strings.TrimPrefix(path, "templates/")
-		name = strings.TrimSuffix(name, ".html")
-		name = strings.ReplaceAll(name, "/", "-")
+		name := strings.TrimPrefix(path, constants.TemplateDirectoryPrefix)
+		name = strings.TrimSuffix(name, constants.HTMLFileExtension)
+		name = strings.ReplaceAll(name, constants.TemplateNameSeparator, "-")
 
 		// Parse the template
 		_, err = tmpl.New(name).Parse(string(content))
@@ -61,9 +62,9 @@ func LoadTemplates(funcMap template.FuncMap) (*template.Template, error) {
 
 	// Read all CSS files
 	cssFiles := []string{
-		"templates/styles/main.css",
-		"templates/styles/themes.css",
-		"templates/styles/components.css",
+		constants.TemplateDirectoryPrefix + "styles/main.css",
+		constants.TemplateDirectoryPrefix + "styles/themes.css",
+		constants.TemplateDirectoryPrefix + "styles/components.css",
 	}
 
 	for _, cssFile := range cssFiles {
@@ -86,7 +87,7 @@ func LoadTemplates(funcMap template.FuncMap) (*template.Template, error) {
 
 	// Read all JS files
 	jsFiles := []string{
-		"templates/scripts/main.js",
+		constants.TemplateDirectoryPrefix + "scripts/main.js",
 	}
 
 	for _, jsFile := range jsFiles {
@@ -105,7 +106,7 @@ func LoadTemplates(funcMap template.FuncMap) (*template.Template, error) {
 	}
 
 	// Parse entry and tool-call templates with their original names
-	entryContent, err := templateFS.ReadFile("templates/partials/entry.html")
+	entryContent, err := templateFS.ReadFile(constants.TemplateDirectoryPrefix + "partials/entry.html")
 	if err != nil {
 		return nil, fmt.Errorf("failed to read entry template: %w", err)
 	}
@@ -114,7 +115,7 @@ func LoadTemplates(funcMap template.FuncMap) (*template.Template, error) {
 		return nil, fmt.Errorf("failed to parse entry template: %w", err)
 	}
 
-	toolCallContent, err := templateFS.ReadFile("templates/partials/tool-call.html")
+	toolCallContent, err := templateFS.ReadFile(constants.TemplateDirectoryPrefix + "partials/tool-call.html")
 	if err != nil {
 		return nil, fmt.Errorf("failed to read tool-call template: %w", err)
 	}

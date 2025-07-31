@@ -2,7 +2,7 @@ package builders
 
 import (
 	"fmt"
-	"github.com/brads3290/cclogviewer/internal/processor"
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"html"
 	"strings"
 )
@@ -15,7 +15,7 @@ type HTMLBuilder struct {
 // NewHTMLBuilder creates a new HTML builder
 func NewHTMLBuilder() *HTMLBuilder {
 	return &HTMLBuilder{
-		parts: make([]string, 0, processor.HTMLBuilderInitialCapacity),
+		parts: make([]string, 0, constants.HTMLBuilderInitialCapacity),
 	}
 }
 

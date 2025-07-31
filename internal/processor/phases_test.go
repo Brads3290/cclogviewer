@@ -3,6 +3,7 @@ package processor
 import (
 	"testing"
 
+	"github.com/brads3290/cclogviewer/internal/constants"
 	"github.com/brads3290/cclogviewer/internal/models"
 )
 
@@ -30,13 +31,13 @@ func TestProcessAllEntries(t *testing.T) {
 	entries := []models.LogEntry{
 		{
 			UUID:      "test-1",
-			Type:      TypeUser,
+			Type:      constants.TypeUser,
 			Timestamp: "2024-01-01T10:00:00Z",
 			Message:   []byte(`{"role":"user","content":"Hello"}`),
 		},
 		{
 			UUID:      "test-2",
-			Type:      TypeAssistant,
+			Type:      constants.TypeAssistant,
 			Timestamp: "2024-01-01T10:00:01Z",
 			Message:   []byte(`{"role":"assistant","content":[{"type":"text","text":"Hi there!"}]}`),
 		},
@@ -63,8 +64,8 @@ func TestProcessAllEntries(t *testing.T) {
 		if entry.UUID != "test-1" {
 			t.Errorf("Expected UUID test-1, got %s", entry.UUID)
 		}
-		if entry.Role != RoleUser {
-			t.Errorf("Expected role %s, got %s", RoleUser, entry.Role)
+		if entry.Role != constants.RoleUser {
+			t.Errorf("Expected role %s, got %s", constants.RoleUser, entry.Role)
 		}
 	}
 }
