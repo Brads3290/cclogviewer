@@ -10,7 +10,6 @@ type ProcessingState struct {
 	Entries        []*models.ProcessedEntry
 	ToolCallMap    map[string]*ToolCallContext
 	ParentChildMap map[string][]string
-	RootParent     string
 	Index          int
 }
 
@@ -19,19 +18,11 @@ type ToolCallContext struct {
 	Entry      *models.ProcessedEntry
 	ToolCall   *models.ToolCall
 	CallTime   time.Time
-	ParentID   string
-	IsComplete bool
 }
 
 // SidechainContext tracks Task tool sidechain conversations.
 type SidechainContext struct {
 	RootToolCallID string
-	StartIndex     int
-	EndIndex       int
 	Entries        []*models.ProcessedEntry
 }
 
-// MatchingOptions controls tool call matching behavior.
-type MatchingOptions struct {
-	WindowSize time.Duration
-}

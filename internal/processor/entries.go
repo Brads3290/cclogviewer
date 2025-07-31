@@ -183,54 +183,6 @@ func extractContent(entry *models.ProcessedEntry) string {
 	return strings.TrimSpace(entry.Content)
 }
 
-// truncateString truncates a string to a maximum length
-func truncateString(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
-	}
-	return s[:maxLen] + "..."
-}
-
-// extractFullSidechainContent extracts all text content from a sidechain conversation
-func extractFullSidechainContent(root *models.ProcessedEntry, entryMap map[string]*models.ProcessedEntry) string {
-	var content strings.Builder
-
-	// Helper function to extract content from an entry and its children
-	var extractFromEntry func(entry *models.ProcessedEntry)
-	extractFromEntry = func(entry *models.ProcessedEntry) {
-		// Add this entry's content
-		entryText := extractContent(entry)
-		if entryText != "" {
-			content.WriteString(entryText)
-			content.WriteString(" ")
-		}
-
-		// Process children
-		for _, child := range entry.Children {
-			extractFromEntry(child)
-		}
-
-		// Process any entries that have this as parent
-		for _, e := range entryMap {
-			if e.ParentUUID == entry.UUID && e.IsSidechain {
-				// Check if it's already in children
-				found := false
-				for _, child := range entry.Children {
-					if child.UUID == e.UUID {
-						found = true
-						break
-					}
-				}
-				if !found {
-					extractFromEntry(e)
-				}
-			}
-		}
-	}
-
-	extractFromEntry(root)
-	return content.String()
-}
 
 // getFirstUserMessage finds the first user message in a sidechain conversation
 func getFirstUserMessage(root *models.ProcessedEntry, entryMap map[string]*models.ProcessedEntry) string {

@@ -49,32 +49,3 @@ func (h *HierarchyBuilder) setEntryDepth(entry *models.ProcessedEntry, depth int
 	}
 }
 
-// calculateDepths calculates depths for all entries based on their relationships
-func (h *HierarchyBuilder) calculateDepths(entries []*models.ProcessedEntry, parentChildMap map[string][]string) {
-	// This is now handled by setEntryDepth which is more appropriate for our use case
-	// since depth is based on sidechain nesting, not parent-child relationships
-}
-
-// findRootEntries identifies root-level entries (entries without parents)
-func (h *HierarchyBuilder) findRootEntries(entries []*models.ProcessedEntry) []*models.ProcessedEntry {
-	var roots []*models.ProcessedEntry
-	for _, entry := range entries {
-		if entry.ParentUUID == "" {
-			roots = append(roots, entry)
-		}
-	}
-	return roots
-}
-
-// BuildParentChildMap builds a map of parent UUIDs to child UUIDs
-func (h *HierarchyBuilder) BuildParentChildMap(entries []*models.ProcessedEntry) map[string][]string {
-	parentChildMap := make(map[string][]string)
-
-	for _, entry := range entries {
-		if entry.ParentUUID != "" {
-			parentChildMap[entry.ParentUUID] = append(parentChildMap[entry.ParentUUID], entry.UUID)
-		}
-	}
-
-	return parentChildMap
-}

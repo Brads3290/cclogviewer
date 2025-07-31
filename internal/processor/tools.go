@@ -1,8 +1,6 @@
 package processor
 
 import (
-	"html/template"
-
 	"github.com/brads3290/cclogviewer/internal/models"
 	"github.com/brads3290/cclogviewer/internal/processor/tools"
 	"github.com/brads3290/cclogviewer/internal/processor/tools/formatters"
@@ -27,11 +25,3 @@ func ProcessToolUse(toolUse map[string]interface{}) models.ToolCall {
 	return GetToolProcessor().ProcessToolUseWithRegistry(toolUse)
 }
 
-// formatBashToolInput is kept for backward compatibility with templates
-func formatBashToolInput(input map[string]interface{}, cwd string) template.HTML {
-	html, err := registry.FormatWithCWD(ToolNameBash, input, cwd)
-	if err != nil {
-		return template.HTML("")
-	}
-	return html
-}

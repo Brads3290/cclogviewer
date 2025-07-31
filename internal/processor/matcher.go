@@ -3,19 +3,15 @@ package processor
 import (
 	"github.com/brads3290/cclogviewer/internal/models"
 	"strings"
-	"time"
 )
 
 // ToolCallMatcher matches tool calls with their results.
 type ToolCallMatcher struct {
-	windowSize time.Duration
 }
 
 // NewToolCallMatcher creates a new tool call matcher
 func NewToolCallMatcher() *ToolCallMatcher {
-	return &ToolCallMatcher{
-		windowSize: 5 * time.Minute, // Default 5 minute window
-	}
+	return &ToolCallMatcher{}
 }
 
 // MatchToolCalls uses a 5-minute window to prevent false matches in long conversations.
@@ -85,11 +81,3 @@ func (m *ToolCallMatcher) FilterRootEntries(entries []*models.ProcessedEntry) []
 	return rootEntries
 }
 
-// isWithinWindow checks if two timestamps are within the matching window
-func (m *ToolCallMatcher) isWithinWindow(callTime, resultTime time.Time) bool {
-	if callTime.IsZero() || resultTime.IsZero() {
-		return false
-	}
-	diff := resultTime.Sub(callTime)
-	return diff >= 0 && diff <= m.windowSize
-}

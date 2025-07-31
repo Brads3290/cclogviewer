@@ -332,20 +332,3 @@ func (s *SidechainProcessor) calculateMatchScore(
 }
 
 // collectSidechainEntries collects all entries in a sidechain conversation
-
-// identifySidechainBoundaries identifies the start and end points of sidechain conversations
-func (s *SidechainProcessor) identifySidechainBoundaries(entries []*models.ProcessedEntry) []SidechainContext {
-	var contexts []SidechainContext
-
-	// This functionality is now handled by collecting sidechain roots and building trees
-	// The boundaries are implicit in the parent-child relationships
-
-	return contexts
-}
-
-// groupSidechainEntries creates a grouped entry for a sidechain conversation
-func (s *SidechainProcessor) groupSidechainEntries(ctx SidechainContext, entries []*models.ProcessedEntry) *models.ProcessedEntry {
-	// This functionality is now handled by collectSidechainEntries
-	// which builds the tree structure for display
-	return nil
-}
