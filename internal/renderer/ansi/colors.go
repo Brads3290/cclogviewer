@@ -158,4 +158,3 @@ func (m *ColorMapper) GetRGBColor(r, g, b int) string {
 
 	return rgbToHex(r, g, b)
 }
-

@@ -162,4 +162,3 @@ func (s *ANSIState) Clone() *ANSIState {
 		BgColor:       s.BgColor,
 	}
 }
-

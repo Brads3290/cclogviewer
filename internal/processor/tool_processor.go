@@ -39,7 +39,7 @@ func (tp *ToolProcessor) ProcessToolCall(toolCall *models.ToolCall) {
 	// Get description from formatter
 	if input, ok := toolCall.RawInput.(map[string]interface{}); ok {
 		toolCall.Description = tp.registry.GetDescription(toolCall.Name, input)
-		
+
 		// Format the input
 		formattedInput, err := tp.registry.Format(toolCall.Name, input)
 		if err != nil {
@@ -48,7 +48,7 @@ func (tp *ToolProcessor) ProcessToolCall(toolCall *models.ToolCall) {
 		} else {
 			toolCall.Input = formattedInput
 		}
-		
+
 		// Generate compact view
 		toolCall.CompactView = tp.registry.GetCompactView(toolCall.Name, input)
 	}

@@ -50,20 +50,20 @@ type ProcessedEntry struct {
 	RawTimestamp string // Keep the raw timestamp for comparisons
 	Role         string
 	Content      string // Raw content, HTML escaping happens in templates
-	
+
 	// Relationships
 	Children []*ProcessedEntry
 	Depth    int
-	
+
 	// Tool-related
 	ToolCalls    []ToolCall
 	IsToolResult bool
 	ToolResultID string // For matching tool results to tool calls
-	
+
 	// Embedded structs for grouping
 	TokenMetrics
 	CommandInfo
-	
+
 	// Flags
 	IsSidechain     bool
 	IsError         bool

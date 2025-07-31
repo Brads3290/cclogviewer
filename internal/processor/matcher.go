@@ -85,7 +85,6 @@ func (m *ToolCallMatcher) FilterRootEntries(entries []*models.ProcessedEntry) []
 	return rootEntries
 }
 
-
 // isWithinWindow checks if two timestamps are within the matching window
 func (m *ToolCallMatcher) isWithinWindow(callTime, resultTime time.Time) bool {
 	if callTime.IsZero() || resultTime.IsZero() {

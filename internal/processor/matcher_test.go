@@ -32,14 +32,14 @@ func TestMatchToolCalls(t *testing.T) {
 			Content:      "Edit successful",
 		},
 	}
-	
+
 	matcher := NewToolCallMatcher()
 	err := matcher.MatchToolCalls(entries)
-	
+
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	
+
 	// Verify tool calls were matched with results
 	toolCall1 := &entries[0].ToolCalls[0]
 	if toolCall1.Result == nil {
@@ -47,7 +47,7 @@ func TestMatchToolCalls(t *testing.T) {
 	} else if toolCall1.Result.UUID != "result-1" {
 		t.Errorf("Expected tool-1 result UUID to be result-1, got %s", toolCall1.Result.UUID)
 	}
-	
+
 	toolCall2 := &entries[0].ToolCalls[1]
 	if toolCall2.Result == nil {
 		t.Error("Expected tool-2 to have a result")
@@ -63,10 +63,10 @@ func TestFilterRootEntries(t *testing.T) {
 		{UUID: "3", IsSidechain: false, IsToolResult: true, ToolResultID: "tool-1"},
 		{UUID: "4", IsSidechain: false, ToolCalls: []models.ToolCall{{ID: "tool-1", Result: &models.ProcessedEntry{UUID: "3"}}}},
 	}
-	
+
 	matcher := NewToolCallMatcher()
 	rootEntries := matcher.FilterRootEntries(entries)
-	
+
 	// Should filter out:
 	// - Entry 2 (sidechain)
 	// - Entry 3 (matched tool result)
@@ -74,7 +74,7 @@ func TestFilterRootEntries(t *testing.T) {
 	if len(rootEntries) != expectedCount {
 		t.Errorf("Expected %d root entries, got %d", expectedCount, len(rootEntries))
 	}
-	
+
 	// Verify correct entries were included
 	foundEntry1 := false
 	foundEntry4 := false
@@ -86,7 +86,7 @@ func TestFilterRootEntries(t *testing.T) {
 			foundEntry4 = true
 		}
 	}
-	
+
 	if !foundEntry1 {
 		t.Error("Expected entry 1 to be in root entries")
 	}

@@ -13,13 +13,13 @@ func TestConstants(t *testing.T) {
 		"Read":      ToolNameRead,
 		"TodoWrite": ToolNameTodoWrite,
 	}
-	
+
 	for expected, actual := range toolNames {
 		if actual != expected {
 			t.Errorf("Expected tool name %s, got %s", expected, actual)
 		}
 	}
-	
+
 	// Test entry type constants
 	entryTypes := map[string]string{
 		"user":        TypeUser,
@@ -28,13 +28,13 @@ func TestConstants(t *testing.T) {
 		"tool_use":    TypeToolUse,
 		"tool_result": TypeToolResult,
 	}
-	
+
 	for expected, actual := range entryTypes {
 		if actual != expected {
 			t.Errorf("Expected entry type %s, got %s", expected, actual)
 		}
 	}
-	
+
 	// Test role constants
 	if RoleUser != "user" {
 		t.Errorf("Expected RoleUser='user', got %s", RoleUser)

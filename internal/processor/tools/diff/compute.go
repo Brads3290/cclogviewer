@@ -4,6 +4,14 @@ import (
 	"strings"
 )
 
+// isMatchingLCSPosition checks if current positions match in the LCS
+func isMatchingLCSPosition(lcsIdx, oldIdx, newIdx int, lcs, oldLines, newLines []string) bool {
+	if lcsIdx >= len(lcs) || oldIdx >= len(oldLines) || newIdx >= len(newLines) {
+		return false
+	}
+	return oldLines[oldIdx] == lcs[lcsIdx] && newLines[newIdx] == lcs[lcsIdx]
+}
+
 // ComputeLineDiff computes a simple line-based diff between two strings
 func ComputeLineDiff(oldStr, newStr string) []DiffLine {
 	oldLines := strings.Split(oldStr, "\n")
@@ -32,8 +40,7 @@ func ComputeLineDiff(oldStr, newStr string) []DiffLine {
 	lineNum := 1
 
 	for oldIdx < len(oldLines) || newIdx < len(newLines) {
-		if lcsIdx < len(lcs) && oldIdx < len(oldLines) && newIdx < len(newLines) &&
-			oldLines[oldIdx] == lcs[lcsIdx] && newLines[newIdx] == lcs[lcsIdx] {
+		if isMatchingLCSPosition(lcsIdx, oldIdx, newIdx, lcs, oldLines, newLines) {
 			// Common line
 			diff = append(diff, DiffLine{
 				Type:    LineUnchanged,

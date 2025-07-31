@@ -81,4 +81,3 @@ func (c *ANSIConverter) ConvertToHTML(input string) (string, error) {
 func (c *ANSIConverter) ConvertToPlainText(input string) string {
 	return c.parser.ParseSimple(input)
 }
-

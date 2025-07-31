@@ -2,6 +2,7 @@ package builders
 
 import (
 	"fmt"
+	"github.com/Brads3290/cclogviewer/internal/processor"
 	"html"
 	"strings"
 )
@@ -14,7 +15,7 @@ type HTMLBuilder struct {
 // NewHTMLBuilder creates a new HTML builder
 func NewHTMLBuilder() *HTMLBuilder {
 	return &HTMLBuilder{
-		parts: make([]string, 0, 100),
+		parts: make([]string, 0, processor.HTMLBuilderInitialCapacity),
 	}
 }
 
@@ -101,4 +102,3 @@ func FormatWithLineBreaks(content string) string {
 	escaped := html.EscapeString(content)
 	return strings.ReplaceAll(escaped, "\n", "<br>")
 }
-

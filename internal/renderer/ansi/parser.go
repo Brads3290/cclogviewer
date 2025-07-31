@@ -125,4 +125,3 @@ func (p *ANSIParser) ParseSimple(input string) string {
 
 	return result.String()
 }
-
