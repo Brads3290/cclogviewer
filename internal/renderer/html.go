@@ -3,12 +3,16 @@ package renderer
 import (
 	"fmt"
 	"github.com/Brads3290/cclogviewer/internal/models"
+	"github.com/Brads3290/cclogviewer/internal/renderer/ansi"
+	"github.com/Brads3290/cclogviewer/internal/renderer/builders"
 	"html"
 	"html/template"
 	"os"
 	"regexp"
 	"strings"
 )
+
+var ansiConverter = ansi.NewANSIConverter()
 
 // GenerateHTML generates an HTML file from processed entries
 func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode bool) error {
@@ -42,22 +46,20 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 			return result
 		},
 		"formatContent": func(content string) template.HTML {
-			// Escape HTML
-			content = html.EscapeString(content)
-
 			// Check if content is enclosed in square brackets
 			trimmed := strings.TrimSpace(content)
 			if strings.HasPrefix(trimmed, "[") && strings.HasSuffix(trimmed, "]") {
 				// Check if it's an ANSI escape sequence
-				if !regexp.MustCompile(`\[\d+m`).MatchString(trimmed) {
+				if !regexp.MustCompile(`\x1b\[\d+m`).MatchString(content) {
 					// Regular bracketed message (like [Request interrupted by user])
 					stripped := trimmed[1 : len(trimmed)-1]
-					content = fmt.Sprintf(`<span style="color: #999; font-style: italic;">%s</span>`, stripped)
+					// Escape the content and wrap in styled span
+					return template.HTML(fmt.Sprintf(`<span style="color: #999; font-style: italic;">%s</span>`, html.EscapeString(stripped)))
 				}
 			}
 
-			// Convert ANSI escape codes to HTML
-			content = convertANSIToHTML(content)
+			// Convert ANSI escape codes to HTML (this handles escaping internally)
+			content = ConvertANSIToHTML(content)
 
 			// Convert newlines to <br>
 			content = strings.ReplaceAll(content, "\n", "<br>")
@@ -171,14 +173,14 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 						if i > 0 {
 							result.WriteString("<br>")
 						}
-						result.WriteString(convertANSIToHTML(html.EscapeString(line)))
+						result.WriteString(ConvertANSIToHTML(line))
 					}
 
 					// Hidden lines
 					result.WriteString(`<div class="bash-more-content" style="display: none;">`)
 					for i := 20; i < lineCount; i++ {
 						result.WriteString("<br>")
-						result.WriteString(convertANSIToHTML(html.EscapeString(lines[i])))
+						result.WriteString(ConvertANSIToHTML(lines[i]))
 					}
 					result.WriteString(`</div>`)
 
@@ -197,9 +199,8 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 				} else {
 					// For outputs under 20 lines, show all
 					result.WriteString(`<div class="bash-output">`)
-					// Convert ANSI codes after escaping HTML
-					output := html.EscapeString(tc.Result.Content)
-					output = convertANSIToHTML(output)
+					// Convert ANSI codes (ConvertANSIToHTML handles escaping)
+					output := ConvertANSIToHTML(tc.Result.Content)
 					result.WriteString(strings.ReplaceAll(output, "\n", "<br>"))
 					result.WriteString(`</div>`)
 				}
@@ -236,155 +237,12 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 	return ExecuteTemplate(tmpl, file, data)
 }
 
-// convertANSIToHTML converts ANSI escape codes to HTML formatting
-func convertANSIToHTML(text string) string {
-	// Common ANSI codes:
-	// [1m = bold
-	// [22m = normal (not bold)
-	// [3m = italic
-	// [23m = not italic
-	// [4m = underline
-	// [24m = not underline
-	// [30-37m = foreground colors
-	// [40-47m = background colors
-	// [90-97m = bright foreground colors
-	// [0m = reset all
-	// [39m = default foreground color
-	// [49m = default background color
-
-	// Simple approach: handle the most common cases
-	ansiPattern := regexp.MustCompile(`\[(\d+)m`)
-
-	var result strings.Builder
-	lastIndex := 0
-	openTags := []string{}
-	openSpans := []string{} // Track color spans separately
-
-	for _, match := range ansiPattern.FindAllStringSubmatchIndex(text, -1) {
-		// Add text before the match
-		result.WriteString(text[lastIndex:match[0]])
-
-		// Get the ANSI code
-		code := text[match[2]:match[3]]
-
-		switch code {
-		case "1":
-			result.WriteString(`<strong>`)
-			openTags = append(openTags, "</strong>")
-		case "22":
-			// Close bold if open
-			for i := len(openTags) - 1; i >= 0; i-- {
-				if openTags[i] == "</strong>" {
-					result.WriteString("</strong>")
-					openTags = append(openTags[:i], openTags[i+1:]...)
-					break
-				}
-			}
-		case "3":
-			result.WriteString(`<em>`)
-			openTags = append(openTags, "</em>")
-		case "23":
-			// Close italic if open
-			for i := len(openTags) - 1; i >= 0; i-- {
-				if openTags[i] == "</em>" {
-					result.WriteString("</em>")
-					openTags = append(openTags[:i], openTags[i+1:]...)
-					break
-				}
-			}
-		case "4":
-			result.WriteString(`<u>`)
-			openTags = append(openTags, "</u>")
-		case "24":
-			// Close underline if open
-			for i := len(openTags) - 1; i >= 0; i-- {
-				if openTags[i] == "</u>" {
-					result.WriteString("</u>")
-					openTags = append(openTags[:i], openTags[i+1:]...)
-					break
-				}
-			}
-		// Foreground colors
-		case "30":
-			result.WriteString(`<span style="color: #000000">`)
-			openSpans = append(openSpans, "</span>")
-		case "31":
-			result.WriteString(`<span style="color: #cc0000">`)
-			openSpans = append(openSpans, "</span>")
-		case "32":
-			result.WriteString(`<span style="color: #4e9a06">`)
-			openSpans = append(openSpans, "</span>")
-		case "33":
-			result.WriteString(`<span style="color: #c4a000">`)
-			openSpans = append(openSpans, "</span>")
-		case "34":
-			result.WriteString(`<span style="color: #3465a4">`)
-			openSpans = append(openSpans, "</span>")
-		case "35":
-			result.WriteString(`<span style="color: #75507b">`)
-			openSpans = append(openSpans, "</span>")
-		case "36":
-			result.WriteString(`<span style="color: #06989a">`)
-			openSpans = append(openSpans, "</span>")
-		case "37":
-			result.WriteString(`<span style="color: #d3d7cf">`)
-			openSpans = append(openSpans, "</span>")
-		// Bright foreground colors
-		case "90":
-			result.WriteString(`<span style="color: #555753">`)
-			openSpans = append(openSpans, "</span>")
-		case "91":
-			result.WriteString(`<span style="color: #ef2929">`)
-			openSpans = append(openSpans, "</span>")
-		case "92":
-			result.WriteString(`<span style="color: #8ae234">`)
-			openSpans = append(openSpans, "</span>")
-		case "93":
-			result.WriteString(`<span style="color: #fce94f">`)
-			openSpans = append(openSpans, "</span>")
-		case "94":
-			result.WriteString(`<span style="color: #729fcf">`)
-			openSpans = append(openSpans, "</span>")
-		case "95":
-			result.WriteString(`<span style="color: #ad7fa8">`)
-			openSpans = append(openSpans, "</span>")
-		case "96":
-			result.WriteString(`<span style="color: #34e2e2">`)
-			openSpans = append(openSpans, "</span>")
-		case "97":
-			result.WriteString(`<span style="color: #eeeeec">`)
-			openSpans = append(openSpans, "</span>")
-		case "39":
-			// Default foreground color - close any open color spans
-			for i := len(openSpans) - 1; i >= 0; i-- {
-				result.WriteString(openSpans[i])
-			}
-			openSpans = nil
-		case "0":
-			// Reset all - close all open tags and spans
-			for i := len(openTags) - 1; i >= 0; i-- {
-				result.WriteString(openTags[i])
-			}
-			for i := len(openSpans) - 1; i >= 0; i-- {
-				result.WriteString(openSpans[i])
-			}
-			openTags = nil
-			openSpans = nil
-		}
-
-		lastIndex = match[1]
+// ConvertANSIToHTML converts ANSI escape sequences to HTML
+func ConvertANSIToHTML(input string) string {
+	html, err := ansiConverter.ConvertToHTML(input)
+	if err != nil {
+		// Fallback to escaped text
+		return builders.EscapeHTML(input)
 	}
-
-	// Add remaining text
-	result.WriteString(text[lastIndex:])
-
-	// Close any remaining open tags and spans
-	for i := len(openTags) - 1; i >= 0; i-- {
-		result.WriteString(openTags[i])
-	}
-	for i := len(openSpans) - 1; i >= 0; i-- {
-		result.WriteString(openSpans[i])
-	}
-
-	return result.String()
+	return html
 }

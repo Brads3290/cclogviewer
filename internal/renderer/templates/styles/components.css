@@ -334,3 +334,20 @@
     float: right;
     opacity: 0.7;
 }
+
+/* ANSI formatting styles */
+.ansi-bold {
+    font-weight: bold;
+}
+
+.ansi-italic {
+    font-style: italic;
+}
+
+.ansi-underline {
+    text-decoration: underline;
+}
+
+.ansi-strike {
+    text-decoration: line-through;
+}
