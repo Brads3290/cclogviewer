@@ -7,6 +7,7 @@ import (
 	"github.com/brads3290/cclogviewer/internal/debug"
 	"github.com/brads3290/cclogviewer/internal/models"
 	"log"
+	"math"
 	"os"
 )
 
@@ -20,9 +21,9 @@ func ReadJSONLFile(filename string) ([]models.LogEntry, error) {
 
 	var entries []models.LogEntry
 	scanner := bufio.NewScanner(file)
-	// Increase buffer size for large lines
+	// Set buffer with no maximum size limit
 	buf := make([]byte, 0, constants.DefaultScannerBufferSize)
-	scanner.Buffer(buf, constants.MaxJSONLLineSize)
+	scanner.Buffer(buf, math.MaxInt)
 
 	lineNum := 0
 	for scanner.Scan() {

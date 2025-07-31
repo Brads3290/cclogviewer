@@ -7,9 +7,6 @@ const (
 	// DefaultScannerBufferSize is the initial buffer size for JSONL scanner (64KB)
 	DefaultScannerBufferSize = 64 * 1024
 	
-	// MaxJSONLLineSize is the maximum size of a single JSONL line (10MB)
-	MaxJSONLLineSize = 10 * 1024 * 1024
-	
 	// HTMLBuilderInitialCapacity is the initial capacity for HTML string builders
 	HTMLBuilderInitialCapacity = 100
 )
