@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// HTMLBuilder provides methods for building HTML content
+// HTMLBuilder constructs HTML content incrementally.
 type HTMLBuilder struct {
 	parts []string
 }

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// SidechainProcessor handles processing of sidechain conversations
+// SidechainProcessor handles Task tool sidechain conversation processing.
 type SidechainProcessor struct{}
 
 // NewSidechainProcessor creates a new sidechain processor
@@ -17,7 +17,7 @@ func NewSidechainProcessor() *SidechainProcessor {
 	return &SidechainProcessor{}
 }
 
-// TaskMatchContext holds the context for matching Task tools with sidechains
+// TaskMatchContext holds context for Task tool sidechain matching.
 type TaskMatchContext struct {
 	ToolCall          *models.ToolCall
 	Entry             *models.LogEntry
@@ -240,7 +240,7 @@ func (s *SidechainProcessor) hasPrefixMatch(str1, str2 string) bool {
 	return strings.HasPrefix(str1, str2) || strings.HasPrefix(str2, str1)
 }
 
-// findBestMatchingSidechain finds the best matching sidechain for a Task tool
+// findBestMatchingSidechain scores matches to handle concurrent Task invocations.
 func (s *SidechainProcessor) findBestMatchingSidechain(
 	toolCall *models.ToolCall,
 	taskPrompt, taskResult string,
@@ -290,7 +290,7 @@ func (s *SidechainProcessor) findBestMatchingSidechain(
 	return bestMatch, bestMatchScore
 }
 
-// calculateMatchScore calculates the match score between a Task tool and a sidechain
+// calculateMatchScore uses prompt and result matching to disambiguate sidechains.
 func (s *SidechainProcessor) calculateMatchScore(
 	toolCall *models.ToolCall,
 	taskPrompt, taskResult, firstUser, lastAssistant string,

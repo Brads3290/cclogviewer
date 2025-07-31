@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// BashResultFormatter handles formatting of bash command results
+// BashResultFormatter formats Bash command results for display.
 type BashResultFormatter struct{}
 
 // NewBashResultFormatter creates a new bash result formatter

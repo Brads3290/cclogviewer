@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// TokenType represents the type of ANSI token
+// TokenType represents the type of ANSI token.
 type TokenType int
 
 const (
@@ -16,14 +16,14 @@ const (
 	TokenEscapeSequence
 )
 
-// ANSIToken represents a parsed token from ANSI input
+// ANSIToken represents a parsed ANSI token.
 type ANSIToken struct {
 	Type    TokenType
 	Content string
 	Codes   []int
 }
 
-// ANSIParser parses ANSI escape sequences from text
+// ANSIParser parses ANSI escape sequences from text.
 type ANSIParser struct {
 	escapeRegex *regexp.Regexp
 }

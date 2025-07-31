@@ -1,6 +1,6 @@
 package ansi
 
-// ANSIState tracks the current state of ANSI formatting
+// ANSIState tracks the current ANSI formatting state.
 type ANSIState struct {
 	Bold          bool
 	Italic        bool

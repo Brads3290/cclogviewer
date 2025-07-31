@@ -7,7 +7,7 @@ import (
 	"github.com/brads3290/cclogviewer/internal/processor/tools/diff"
 )
 
-// EditFormatter formats the Edit tool
+// EditFormatter formats Edit tool inputs and outputs.
 type EditFormatter struct {
 	BaseFormatter
 }

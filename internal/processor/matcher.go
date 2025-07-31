@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// ToolCallMatcher handles matching tool calls with their results
+// ToolCallMatcher matches tool calls with their results.
 type ToolCallMatcher struct {
 	windowSize time.Duration
 }
@@ -18,7 +18,7 @@ func NewToolCallMatcher() *ToolCallMatcher {
 	}
 }
 
-// MatchToolCalls matches tool calls with their results
+// MatchToolCalls uses a 5-minute window to prevent false matches in long conversations.
 func (m *ToolCallMatcher) MatchToolCalls(entries []*models.ProcessedEntry) error {
 	// Build maps for both main and sidechain tool calls
 	mainToolCallMap := make(map[string]*models.ToolCall)

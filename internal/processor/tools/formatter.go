@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-// ToolFormatter defines the interface for tool-specific formatters
+// ToolFormatter formats tool inputs and outputs for display.
 type ToolFormatter interface {
 	Name() string
 	FormatInput(data map[string]interface{}) (template.HTML, error)
@@ -18,13 +18,13 @@ type ToolFormatter interface {
 	GetCompactView(data map[string]interface{}) template.HTML
 }
 
-// BashFormatter is a special interface for the Bash tool formatter
+// BashFormatter extends ToolFormatter with CWD context.
 type BashFormatter interface {
 	ToolFormatter
 	FormatInputWithCWD(data map[string]interface{}, cwd string) (template.HTML, error)
 }
 
-// FormatterRegistry manages tool formatters
+// FormatterRegistry manages tool-specific formatters.
 type FormatterRegistry struct {
 	formatters map[string]ToolFormatter
 	mu         sync.RWMutex

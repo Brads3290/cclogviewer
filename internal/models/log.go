@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-// LogEntry represents a single line from the JSONL file
+// LogEntry represents a single JSONL log entry.
 type LogEntry struct {
 	ParentUUID    *string         `json:"parentUuid"`
 	IsSidechain   bool            `json:"isSidechain"`
@@ -22,7 +22,7 @@ type LogEntry struct {
 	ToolUseResult interface{}     `json:"toolUseResult"`
 }
 
-// TokenMetrics groups token-related fields
+// TokenMetrics groups token usage and counting metrics.
 type TokenMetrics struct {
 	TokenCount          int // Tokens in this message (output tokens for assistant, estimated for user)
 	TotalTokens         int // Running total of all tokens up to this message
@@ -32,7 +32,7 @@ type TokenMetrics struct {
 	CacheCreationTokens int // Cache creation tokens from usage
 }
 
-// CommandInfo groups command-related fields
+// CommandInfo groups local command execution data.
 type CommandInfo struct {
 	IsCommandMessage bool   // True if this is a command message with XML syntax
 	CommandName      string // The command name (e.g., "/add-dir")
@@ -40,7 +40,7 @@ type CommandInfo struct {
 	CommandOutput    string // The stdout output from the command
 }
 
-// ProcessedEntry represents a processed log entry for display
+// ProcessedEntry is a LogEntry enriched with hierarchy and metadata.
 type ProcessedEntry struct {
 	// Core fields
 	UUID         string

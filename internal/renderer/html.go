@@ -15,7 +15,7 @@ import (
 
 var ansiConverter = ansi.NewANSIConverter()
 
-// GenerateHTML generates an HTML file from processed entries
+// GenerateHTML renders processed entries to an HTML file.
 func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode bool) error {
 	// Create custom function map
 	funcMap := template.FuncMap{
@@ -146,7 +146,7 @@ func GenerateHTML(entries []*models.ProcessedEntry, outputFile string, debugMode
 	return ExecuteTemplate(tmpl, file, data)
 }
 
-// ConvertANSIToHTML converts ANSI escape sequences to HTML
+// ConvertANSIToHTML converts ANSI escape sequences to styled HTML.
 func ConvertANSIToHTML(input string) string {
 	html, err := ansiConverter.ConvertToHTML(input)
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// ProcessEntries processes raw log entries into a structured format
+// ProcessEntries builds a hierarchical structure from flat log entries.
 func ProcessEntries(entries []models.LogEntry) []*models.ProcessedEntry {
 	state := initializeProcessingState(len(entries))
 	entryMap := make(map[string]*models.ProcessedEntry)
@@ -59,7 +59,7 @@ func checkMissingToolResults(entry *models.ProcessedEntry) {
 	}
 }
 
-// calculateTokensForEntry recursively calculates tokens for an entry and all its nested tool calls
+// calculateTokensForEntry recursively aggregates tokens across nested tool calls.
 func calculateTokensForEntry(entry *models.ProcessedEntry) {
 	entry.TotalTokens = entry.InputTokens + entry.OutputTokens +
 		entry.CacheReadTokens + entry.CacheCreationTokens
@@ -174,7 +174,7 @@ func isToolResult(msg map[string]interface{}) bool {
 	return false
 }
 
-// GetStringValue extracts a string value from a map
+// GetStringValue safely extracts a string value from a map.
 func GetStringValue(m map[string]interface{}, key string) string {
 	if val, ok := m[key].(string); ok {
 		return val
@@ -182,7 +182,7 @@ func GetStringValue(m map[string]interface{}, key string) string {
 	return ""
 }
 
-// GetBoolValue extracts a bool value from a map
+// GetBoolValue safely extracts a bool value from a map.
 func GetBoolValue(m map[string]interface{}, key string) bool {
 	if val, ok := m[key].(bool); ok {
 		return val
@@ -365,7 +365,7 @@ func isCommandWithStdout(current, next *models.ProcessedEntry) bool {
 		strings.Contains(next.Content, "<"+TagCommandStdout+">")
 }
 
-// linkCommandOutputs links stdout messages to their preceding command messages
+// linkCommandOutputs merges adjacent command and stdout messages for cleaner display.
 func linkCommandOutputs(entries []*models.ProcessedEntry) {
 	for i := 0; i < len(entries)-1; i++ {
 		current := entries[i]

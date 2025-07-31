@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// MessageHandler defines a function for processing specific message types
+// MessageHandler processes specific message types.
 type MessageHandler func(*models.ProcessedEntry, map[string]interface{}, models.LogEntry) error
 
 // messageHandlers maps message types to their handlers
@@ -82,7 +82,7 @@ func extractToolResultData(processed *models.ProcessedEntry, msg map[string]inte
 	processed.ToolResultID = GetStringValue(toolResult, "tool_use_id")
 }
 
-// TokenProcessor handles token counting logic
+// TokenProcessor calculates and tracks token usage.
 type TokenProcessor struct{}
 
 // NewTokenProcessor creates a new token processor

@@ -7,7 +7,7 @@ import (
 	"github.com/brads3290/cclogviewer/internal/processor/tools"
 )
 
-// BashFormatter formats the Bash tool
+// BashFormatter formats Bash tool inputs and outputs.
 type BashFormatter struct {
 	BaseFormatter
 }

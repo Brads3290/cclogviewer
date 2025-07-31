@@ -22,8 +22,7 @@ func init() {
 	registry.Register(formatters.NewTodoWriteFormatter())
 }
 
-// ProcessToolUse processes a tool use message and returns a ToolCall
-// This function delegates to the global ToolProcessor for consistency
+// ProcessToolUse processes a tool invocation and formats its display.
 func ProcessToolUse(toolUse map[string]interface{}) models.ToolCall {
 	return GetToolProcessor().ProcessToolUseWithRegistry(toolUse)
 }

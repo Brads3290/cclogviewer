@@ -6,7 +6,7 @@ import (
 	"html/template"
 )
 
-// BaseFormatter provides common functionality for tool formatters
+// BaseFormatter provides common functionality for tool formatters.
 type BaseFormatter struct {
 	toolName string
 }

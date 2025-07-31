@@ -4,7 +4,7 @@ import (
 	"github.com/brads3290/cclogviewer/internal/renderer/builders"
 )
 
-// ANSIConverter converts ANSI escape sequences to HTML
+// ANSIConverter converts ANSI escape sequences to HTML.
 type ANSIConverter struct {
 	parser      *ANSIParser
 	colorMapper *ColorMapper

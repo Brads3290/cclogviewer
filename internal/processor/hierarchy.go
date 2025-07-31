@@ -2,7 +2,7 @@ package processor
 
 import "github.com/brads3290/cclogviewer/internal/models"
 
-// HierarchyBuilder builds parent-child relationships and calculates depths
+// HierarchyBuilder builds conversation hierarchy and calculates depths.
 type HierarchyBuilder struct{}
 
 // NewHierarchyBuilder creates a new hierarchy builder

@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-// OpenInBrowser opens the given file in the default browser
+// OpenInBrowser opens a file in the system's default browser.
 func OpenInBrowser(filename string) error {
 	var cmd *exec.Cmd
 

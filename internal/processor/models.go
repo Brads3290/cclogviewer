@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// ProcessingState holds all state during entry processing
+// ProcessingState holds all state during entry processing.
 type ProcessingState struct {
 	Entries        []*models.ProcessedEntry
 	ToolCallMap    map[string]*ToolCallContext
@@ -14,7 +14,7 @@ type ProcessingState struct {
 	Index          int
 }
 
-// ToolCallContext tracks pending tool calls
+// ToolCallContext tracks pending tool calls awaiting results.
 type ToolCallContext struct {
 	Entry      *models.ProcessedEntry
 	ToolCall   *models.ToolCall
@@ -23,7 +23,7 @@ type ToolCallContext struct {
 	IsComplete bool
 }
 
-// SidechainContext tracks active sidechain conversations
+// SidechainContext tracks Task tool sidechain conversations.
 type SidechainContext struct {
 	RootToolCallID string
 	StartIndex     int
@@ -31,7 +31,7 @@ type SidechainContext struct {
 	Entries        []*models.ProcessedEntry
 }
 
-// MatchingOptions controls how tool calls are matched
+// MatchingOptions controls tool call matching behavior.
 type MatchingOptions struct {
 	WindowSize time.Duration
 }

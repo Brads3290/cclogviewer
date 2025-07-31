@@ -8,7 +8,7 @@ import (
 	"github.com/brads3290/cclogviewer/internal/processor/tools/diff"
 )
 
-// MultiEditFormatter formats the MultiEdit tool
+// MultiEditFormatter formats MultiEdit tool inputs and outputs.
 type MultiEditFormatter struct {
 	BaseFormatter
 }

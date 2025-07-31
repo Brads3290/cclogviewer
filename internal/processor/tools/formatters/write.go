@@ -5,7 +5,7 @@ import (
 	"html/template"
 )
 
-// WriteFormatter formats the Write tool
+// WriteFormatter formats Write tool inputs and outputs.
 type WriteFormatter struct {
 	BaseFormatter
 }

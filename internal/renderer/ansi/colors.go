@@ -1,6 +1,6 @@
 package ansi
 
-// ColorMapper handles ANSI color code to CSS color mapping
+// ColorMapper maps ANSI color codes to CSS colors.
 type ColorMapper struct {
 	foregroundColors map[int]string
 	backgroundColors map[int]string

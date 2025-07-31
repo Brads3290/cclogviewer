@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// FormatDiffHTML formats diff lines as HTML
+// FormatDiffHTML formats diff lines as HTML with syntax highlighting.
 func FormatDiffHTML(lines []DiffLine) template.HTML {
 	var result strings.Builder
 
@@ -30,7 +30,7 @@ func FormatDiffHTML(lines []DiffLine) template.HTML {
 	return template.HTML(result.String())
 }
 
-// FormatDiffInline formats a single diff line
+// FormatDiffInline formats a single diff line as HTML.
 func FormatDiffInline(line DiffLine) string {
 	return fmt.Sprintf(
 		`<div class="diff-line %s"><span class="line-number">%3d</span><span class="line-prefix">%s</span><span class="line-content">%s</span></div>`,

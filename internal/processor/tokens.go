@@ -5,9 +5,7 @@ import (
 	"unicode"
 )
 
-// EstimateTokens provides a simple approximation of token count
-// This uses a rough heuristic: ~4 characters per token for English text
-// For more accurate counting, you would need to use the actual tokenizer
+// EstimateTokens approximates token count using word-based heuristics.
 func EstimateTokens(text string) int {
 	// Remove HTML tags for more accurate counting
 	cleaned := stripHTMLTags(text)

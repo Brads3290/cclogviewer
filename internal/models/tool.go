@@ -2,7 +2,7 @@ package models
 
 import "html/template"
 
-// ToolCall represents a tool invocation
+// ToolCall represents a tool invocation with its result.
 type ToolCall struct {
 	ID                  string
 	Name                string

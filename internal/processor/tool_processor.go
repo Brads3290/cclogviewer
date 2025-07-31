@@ -7,7 +7,7 @@ import (
 	"github.com/brads3290/cclogviewer/internal/processor/tools"
 )
 
-// ToolProcessor handles all tool-related processing
+// ToolProcessor formats and processes tool calls.
 type ToolProcessor struct {
 	registry *tools.FormatterRegistry
 }
@@ -24,7 +24,7 @@ func initGlobalToolProcessor() {
 	}
 }
 
-// GetToolProcessor returns the global tool processor instance
+// GetToolProcessor returns the singleton tool processor.
 func GetToolProcessor() *ToolProcessor {
 	initGlobalToolProcessor()
 	return globalToolProcessor

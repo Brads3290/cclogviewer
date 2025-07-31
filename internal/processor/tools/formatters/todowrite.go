@@ -5,7 +5,7 @@ import (
 	"html/template"
 )
 
-// TodoWriteFormatter formats the TodoWrite tool
+// TodoWriteFormatter formats TodoWrite tool inputs and outputs.
 type TodoWriteFormatter struct {
 	BaseFormatter
 }

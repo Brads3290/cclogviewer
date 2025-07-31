@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// ProcessUserMessage processes user messages and returns raw content
+// ProcessUserMessage extracts content from user messages.
 func ProcessUserMessage(msg map[string]interface{}) string {
 	content := GetStringValue(msg, "content")
 
@@ -41,7 +41,7 @@ func ProcessUserMessage(msg map[string]interface{}) string {
 	return content
 }
 
-// ProcessAssistantMessage processes assistant messages and returns raw content and tool calls
+// ProcessAssistantMessage extracts content and tool calls from assistant messages.
 func ProcessAssistantMessage(msg map[string]interface{}, cwd string) (string, []models.ToolCall) {
 	var content strings.Builder
 	var toolCalls []models.ToolCall

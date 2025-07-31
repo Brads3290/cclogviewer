@@ -12,7 +12,7 @@ import (
 //go:embed templates/*
 var templateFS embed.FS
 
-// LoadTemplates loads all templates from the embedded filesystem
+// LoadTemplates loads embedded HTML templates with custom functions.
 func LoadTemplates(funcMap template.FuncMap) (*template.Template, error) {
 	tmpl := template.New("").Funcs(funcMap)
 
@@ -126,7 +126,7 @@ func LoadTemplates(funcMap template.FuncMap) (*template.Template, error) {
 	return tmpl, nil
 }
 
-// ExecuteTemplate executes the base template with the given data
+// ExecuteTemplate renders the base template with provided data.
 func ExecuteTemplate(tmpl *template.Template, wr io.Writer, data interface{}) error {
 	return tmpl.ExecuteTemplate(wr, "base", data)
 }

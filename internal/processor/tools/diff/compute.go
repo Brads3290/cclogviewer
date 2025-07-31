@@ -12,7 +12,7 @@ func isMatchingLCSPosition(lcsIdx, oldIdx, newIdx int, lcs, oldLines, newLines [
 	return oldLines[oldIdx] == lcs[lcsIdx] && newLines[newIdx] == lcs[lcsIdx]
 }
 
-// ComputeLineDiff computes a simple line-based diff between two strings
+// ComputeLineDiff computes a line-by-line diff between two strings.
 func ComputeLineDiff(oldStr, newStr string) []DiffLine {
 	oldLines := strings.Split(oldStr, "\n")
 	newLines := strings.Split(newStr, "\n")
@@ -75,7 +75,7 @@ func ComputeLineDiff(oldStr, newStr string) []DiffLine {
 	return diff
 }
 
-// longestCommonSubsequence finds the LCS of two string slices
+// longestCommonSubsequence uses dynamic programming for optimal diff generation.
 func longestCommonSubsequence(a, b []string) []string {
 	m, n := len(a), len(b)
 	dp := make([][]int, m+1)
@@ -112,7 +112,7 @@ func longestCommonSubsequence(a, b []string) []string {
 	return lcs
 }
 
-// ComputeUnifiedDiff generates a unified diff format string
+// ComputeUnifiedDiff generates a unified diff format string.
 func ComputeUnifiedDiff(oldStr, newStr string, contextLines int) string {
 	lines := ComputeLineDiff(oldStr, newStr)
 

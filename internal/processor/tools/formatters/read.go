@@ -5,7 +5,7 @@ import (
 	"html/template"
 )
 
-// ReadFormatter formats the Read tool
+// ReadFormatter formats Read tool inputs and outputs.
 type ReadFormatter struct {
 	BaseFormatter
 }

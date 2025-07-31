@@ -1,6 +1,6 @@
 package diff
 
-// LineType represents the type of change in a diff line
+// LineType represents the type of change in a diff line.
 type LineType int
 
 const (
@@ -12,7 +12,7 @@ const (
 	LineRemoved
 )
 
-// DiffLine represents a line in the diff with its type and content
+// DiffLine represents a line in a diff with its metadata.
 type DiffLine struct {
 	Type    LineType
 	Content string
