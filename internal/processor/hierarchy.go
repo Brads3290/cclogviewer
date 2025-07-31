@@ -31,7 +31,7 @@ func (h *HierarchyBuilder) setEntryDepth(entry *models.ProcessedEntry, depth int
 		toolCall := &entry.ToolCalls[i]
 
 		// If this is a Task tool with sidechain entries, set their depth to current depth + 1
-		if toolCall.Name == "Task" && len(toolCall.TaskEntries) > 0 {
+		if toolCall.Name == ToolNameTask && len(toolCall.TaskEntries) > 0 {
 			for _, taskEntry := range toolCall.TaskEntries {
 				h.setEntryDepth(taskEntry, depth+1)
 			}

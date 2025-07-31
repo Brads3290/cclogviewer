@@ -15,12 +15,12 @@ func ProcessUserMessage(msg map[string]interface{}) string {
 			contentType := GetStringValue(contentItem, "type")
 
 			switch contentType {
-			case "text":
+			case ContentTypeText:
 				// Handle text content (including interrupted messages)
 				text := GetStringValue(contentItem, "text")
 
 				return text
-			case "tool_result":
+			case ContentTypeToolResult:
 				// Handle tool result content
 				var toolContent string
 				if contentVal, ok := contentItem["content"].(string); ok {
@@ -52,12 +52,12 @@ func ProcessAssistantMessage(msg map[string]interface{}, cwd string) (string, []
 				contentType := GetStringValue(contentItem, "type")
 
 				switch contentType {
-				case "text":
+				case ContentTypeText:
 					text := GetStringValue(contentItem, "text")
 					if text != "" {
 						content.WriteString(text)
 					}
-				case "tool_use":
+				case ContentTypeToolUse:
 					tool := ProcessToolUse(contentItem)
 					tool.CWD = cwd
 					toolCalls = append(toolCalls, tool)

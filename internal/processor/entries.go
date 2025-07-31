@@ -3,65 +3,31 @@ package processor
 import (
 	"encoding/json"
 	"github.com/Brads3290/cclogviewer/internal/models"
-	"log"
 	"strings"
 	"time"
 )
 
 // ProcessEntries processes raw log entries into a structured format
 func ProcessEntries(entries []models.LogEntry) []*models.ProcessedEntry {
-	// Initialize state
-	state := &ProcessingState{
-		Entries:        make([]*models.ProcessedEntry, 0, len(entries)),
-		ToolCallMap:    make(map[string]*ToolCallContext),
-		ParentChildMap: make(map[string][]string),
-	}
-
-	// Create entry map for quick lookup
+	state := initializeProcessingState(len(entries))
 	entryMap := make(map[string]*models.ProcessedEntry)
-
+	
 	// Phase 1: Process all entries
-	for i, entry := range entries {
-		state.Index = i
-		processed := processEntry(entry)
-		entryMap[processed.UUID] = processed
-		state.Entries = append(state.Entries, processed)
-	}
-
-	// Phase 2: Match tool calls with results
-	matcher := NewToolCallMatcher()
-	if err := matcher.MatchToolCalls(state); err != nil {
-		log.Printf("Error matching tool calls: %v", err)
-	}
-
-	// Filter to get root entries
-	rootEntries := matcher.FilterRootEntries(state.Entries)
-
+	processAllEntries(entries, state, entryMap)
+	
+	// Phase 2: Match tool calls with results  
+	matchToolCallsWithResults(state.Entries)
+	
 	// Phase 3: Process sidechains
-	sidechainProc := NewSidechainProcessor()
-	if err := sidechainProc.ProcessSidechains(state.Entries, entries, entryMap); err != nil {
-		log.Printf("Error processing sidechains: %v", err)
-	}
-
-	// Phase 4: Calculate tokens
-	for _, entry := range rootEntries {
-		calculateTokensForEntry(entry)
-	}
-
-	// Phase 5: Check for missing results
-	for _, entry := range rootEntries {
-		checkMissingToolResults(entry)
-	}
-
-	// Phase 6: Link command outputs
-	linkCommandOutputs(rootEntries)
-
-	// Phase 7: Build hierarchy and set depths
-	hierarchy := NewHierarchyBuilder()
-	if err := hierarchy.BuildHierarchy(rootEntries); err != nil {
-		log.Printf("Error building hierarchy: %v", err)
-	}
-
+	processSidechainConversations(state, entries, entryMap)
+	
+	// Phase 4-7: Post-processing
+	rootEntries := getRootEntries(state)
+	calculateAllTokens(rootEntries)
+	checkAllMissingResults(rootEntries)
+	linkAllCommandOutputs(rootEntries)
+	buildFinalHierarchy(rootEntries)
+	
 	return rootEntries
 }
 
@@ -77,7 +43,7 @@ func checkMissingToolResults(entry *models.ProcessedEntry) {
 		}
 
 		// For Task tools, also check if sidechain is missing
-		if toolCall.Name == "Task" && len(toolCall.TaskEntries) == 0 {
+		if toolCall.Name == ToolNameTask && len(toolCall.TaskEntries) == 0 {
 			toolCall.HasMissingSidechain = true
 		}
 
@@ -95,7 +61,8 @@ func checkMissingToolResults(entry *models.ProcessedEntry) {
 
 // calculateTokensForEntry recursively calculates tokens for an entry and all its nested tool calls
 func calculateTokensForEntry(entry *models.ProcessedEntry) {
-	entry.TotalTokens = entry.InputTokens + entry.CacheReadTokens + entry.CacheCreationTokens
+	entry.TotalTokens = entry.InputTokens + entry.OutputTokens + 
+		entry.CacheReadTokens + entry.CacheCreationTokens
 
 	// Calculate for tool calls
 	for i := range entry.ToolCalls {
@@ -103,7 +70,8 @@ func calculateTokensForEntry(entry *models.ProcessedEntry) {
 
 		// Calculate for tool result
 		if toolCall.Result != nil {
-			toolCall.Result.TotalTokens = toolCall.Result.InputTokens +
+			toolCall.Result.TotalTokens = toolCall.Result.InputTokens + 
+				toolCall.Result.OutputTokens +
 				toolCall.Result.CacheReadTokens + toolCall.Result.CacheCreationTokens
 		}
 
@@ -134,7 +102,7 @@ func processEntry(entry models.LogEntry) *models.ProcessedEntry {
 
 		// Handle different message types
 		switch processed.Type {
-		case "user":
+		case TypeUser:
 			processed.Content = ProcessUserMessage(msg)
 			processed.IsToolResult = isToolResult(msg)
 
@@ -144,13 +112,13 @@ func processEntry(entry models.LogEntry) *models.ProcessedEntry {
 			}
 
 			// Check if this is a command message with XML syntax
-			if strings.Contains(processed.Content, "<command-name>") && strings.Contains(processed.Content, "</command-name>") {
+			if strings.Contains(processed.Content, "<"+TagCommandName+">") && strings.Contains(processed.Content, "</"+TagCommandName+">") {
 				processed.IsCommandMessage = true
 				// Parse command details
-				processed.CommandName = extractXMLContent(processed.Content, "command-name")
-				processed.CommandArgs = extractXMLContent(processed.Content, "command-args")
+				processed.CommandName = extractXMLContent(processed.Content, TagCommandName)
+				processed.CommandArgs = extractXMLContent(processed.Content, TagCommandArgs)
 			}
-		case "assistant":
+		case TypeAssistant:
 			processed.Content, processed.ToolCalls = ProcessAssistantMessage(msg, entry.CWD)
 		}
 
@@ -184,7 +152,7 @@ func processEntry(entry models.LogEntry) *models.ProcessedEntry {
 			// Fall back to estimation for messages without usage data
 			processed.TokenCount = EstimateTokens(string(processed.Content))
 			// For user messages, the estimated tokens are output tokens
-			if processed.Role == "user" {
+			if processed.Role == RoleUser {
 				processed.OutputTokens = processed.TokenCount
 			}
 		}
@@ -250,7 +218,7 @@ func formatTimestamp(ts string) string {
 func isToolResult(msg map[string]interface{}) bool {
 	if content, ok := msg["content"].([]interface{}); ok && len(content) > 0 {
 		if toolResult, ok := content[0].(map[string]interface{}); ok {
-			return GetStringValue(toolResult, "type") == "tool_result"
+			return GetStringValue(toolResult, "type") == TypeToolResult
 		}
 	}
 	return false
@@ -330,7 +298,7 @@ func extractFullSidechainContent(root *models.ProcessedEntry, entryMap map[strin
 // getFirstUserMessage finds the first user message in a sidechain conversation
 func getFirstUserMessage(root *models.ProcessedEntry, entryMap map[string]*models.ProcessedEntry) string {
 	// First check if root itself is a user message
-	if root.Role == "user" {
+	if root.Role == RoleUser {
 		return extractContent(root)
 	}
 
@@ -339,7 +307,7 @@ func getFirstUserMessage(root *models.ProcessedEntry, entryMap map[string]*model
 	findFirstUser = func(entry *models.ProcessedEntry) string {
 		// Check children first (in order)
 		for _, child := range entry.Children {
-			if child.Role == "user" {
+			if child.Role == RoleUser {
 				return extractContent(child)
 			}
 		}
@@ -353,7 +321,7 @@ func getFirstUserMessage(root *models.ProcessedEntry, entryMap map[string]*model
 
 		// Also check entries that have this as parent
 		for _, e := range entryMap {
-			if e.ParentUUID == entry.UUID && e.IsSidechain && e.Role == "user" {
+			if e.ParentUUID == entry.UUID && e.IsSidechain && e.Role == RoleUser {
 				return extractContent(e)
 			}
 		}
@@ -372,7 +340,7 @@ func getLastAssistantMessage(root *models.ProcessedEntry, entryMap map[string]*m
 	var findLastAssistant func(entry *models.ProcessedEntry)
 	findLastAssistant = func(entry *models.ProcessedEntry) {
 		// Check if this is an assistant message
-		if entry.Role == "assistant" && !entry.IsToolResult {
+		if entry.Role == RoleAssistant && !entry.IsToolResult {
 			// Parse timestamp
 			if t, err := time.Parse(time.RFC3339, entry.RawTimestamp); err == nil {
 				if lastAssistantContent == "" || t.After(lastAssistantTime) {
@@ -409,24 +377,6 @@ func getLastAssistantMessage(root *models.ProcessedEntry, entryMap map[string]*m
 	return lastAssistantContent
 }
 
-// extractTaskPrompt extracts the prompt from a Task tool call's raw input
-func extractTaskPrompt(toolCall *models.ToolCall) string {
-	if toolCall.RawInput == nil {
-		return ""
-	}
-
-	inputMap, ok := toolCall.RawInput.(map[string]interface{})
-	if !ok {
-		return ""
-	}
-
-	prompt, ok := inputMap["prompt"].(string)
-	if !ok {
-		return ""
-	}
-
-	return prompt
-}
 
 // normalizeText normalizes text for comparison by removing extra whitespace and newlines
 func normalizeText(text string) string {
@@ -466,40 +416,13 @@ func linkCommandOutputs(entries []*models.ProcessedEntry) {
 		next := entries[i+1]
 
 		// If current is a command message and next contains stdout
-		if current.IsCommandMessage && next.Role == "user" &&
-			strings.Contains(next.Content, "<local-command-stdout>") {
+		if current.IsCommandMessage && next.Role == RoleUser &&
+			strings.Contains(next.Content, "<"+TagCommandStdout+">") {
 			// Extract the stdout content
-			current.CommandOutput = extractXMLContent(next.Content, "local-command-stdout")
+			current.CommandOutput = extractXMLContent(next.Content, TagCommandStdout)
 			// Mark the next entry for removal
 			next.Content = ""
 		}
 	}
 }
 
-// setEntryDepth recursively sets the depth for entries based on sidechain hierarchy
-func setEntryDepth(entry *models.ProcessedEntry, depth int) {
-	// Set the depth for this entry
-	entry.Depth = depth
-
-	// Process all tool calls
-	for i := range entry.ToolCalls {
-		toolCall := &entry.ToolCalls[i]
-
-		// If this is a Task tool with sidechain entries, set their depth to current depth + 1
-		if toolCall.Name == "Task" && len(toolCall.TaskEntries) > 0 {
-			for _, taskEntry := range toolCall.TaskEntries {
-				setEntryDepth(taskEntry, depth+1)
-			}
-		}
-
-		// Also set depth for tool results
-		if toolCall.Result != nil {
-			toolCall.Result.Depth = depth
-		}
-	}
-
-	// Process children (though main conversation entries shouldn't have children)
-	for _, child := range entry.Children {
-		setEntryDepth(child, depth)
-	}
-}

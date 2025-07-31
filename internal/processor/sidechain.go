@@ -30,7 +30,7 @@ func (s *SidechainProcessor) ProcessSidechains(entries []*models.ProcessedEntry,
 
 	// Look through tool calls to match Task tools with their sidechains
 	for _, entry := range originalEntries {
-		if entry.Type == "assistant" {
+		if entry.Type == TypeAssistant {
 			processed := entryMap[entry.UUID]
 
 			if debug.Enabled && len(processed.ToolCalls) > 0 {
@@ -40,7 +40,7 @@ func (s *SidechainProcessor) ProcessSidechains(entries []*models.ProcessedEntry,
 
 			for i := range processed.ToolCalls {
 				toolCall := &processed.ToolCalls[i]
-				if toolCall.Name == "Task" {
+				if toolCall.Name == ToolNameTask {
 					s.matchTaskWithSidechain(toolCall, &entry, originalEntries, sidechainRoots, entryMap, matchedSidechains)
 				}
 			}

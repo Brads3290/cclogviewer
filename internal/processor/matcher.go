@@ -19,13 +19,13 @@ func NewToolCallMatcher() *ToolCallMatcher {
 }
 
 // MatchToolCalls matches tool calls with their results
-func (m *ToolCallMatcher) MatchToolCalls(state *ProcessingState) error {
+func (m *ToolCallMatcher) MatchToolCalls(entries []*models.ProcessedEntry) error {
 	// Build maps for both main and sidechain tool calls
 	mainToolCallMap := make(map[string]*models.ToolCall)
 	sidechainToolCallMap := make(map[string]*models.ToolCall)
 
 	// First, build tool call maps
-	for _, entry := range state.Entries {
+	for _, entry := range entries {
 		if !entry.IsSidechain {
 			for i := range entry.ToolCalls {
 				mainToolCallMap[entry.ToolCalls[i].ID] = &entry.ToolCalls[i]
@@ -38,7 +38,7 @@ func (m *ToolCallMatcher) MatchToolCalls(state *ProcessingState) error {
 	}
 
 	// Second, match tool results
-	for _, entry := range state.Entries {
+	for _, entry := range entries {
 		if entry.IsToolResult && entry.ToolResultID != "" {
 			var toolCall *models.ToolCall
 
@@ -85,10 +85,6 @@ func (m *ToolCallMatcher) FilterRootEntries(entries []*models.ProcessedEntry) []
 	return rootEntries
 }
 
-// findToolCall finds a tool call by ID in the state
-func (m *ToolCallMatcher) findToolCall(state *ProcessingState, toolUseID string) *ToolCallContext {
-	return state.ToolCallMap[toolUseID]
-}
 
 // isWithinWindow checks if two timestamps are within the matching window
 func (m *ToolCallMatcher) isWithinWindow(callTime, resultTime time.Time) bool {
