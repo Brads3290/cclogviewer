@@ -2,22 +2,23 @@ package processor
 
 import (
 	"github.com/brads3290/cclogviewer/internal/models"
+	"github.com/brads3290/cclogviewer/internal/utils"
 	"strings"
 )
 
 // ProcessUserMessage extracts content from user messages.
 func ProcessUserMessage(msg map[string]interface{}) string {
-	content := GetStringValue(msg, "content")
+	content := utils.ExtractString(msg, "content")
 
 	// Check if content is an array
 	if contentArray, ok := msg["content"].([]interface{}); ok && len(contentArray) > 0 {
 		if contentItem, ok := contentArray[0].(map[string]interface{}); ok {
-			contentType := GetStringValue(contentItem, "type")
+			contentType := utils.ExtractString(contentItem, "type")
 
 			switch contentType {
 			case ContentTypeText:
 				// Handle text content (including interrupted messages)
-				text := GetStringValue(contentItem, "text")
+				text := utils.ExtractString(contentItem, "text")
 
 				return text
 			case ContentTypeToolResult:
@@ -28,7 +29,7 @@ func ProcessUserMessage(msg map[string]interface{}) string {
 				} else if contentArray, ok := contentItem["content"].([]interface{}); ok && len(contentArray) > 0 {
 					// Handle array content (like from Task tool)
 					if textContent, ok := contentArray[0].(map[string]interface{}); ok {
-						toolContent = GetStringValue(textContent, "text")
+						toolContent = utils.ExtractString(textContent, "text")
 					}
 				}
 				return toolContent
@@ -49,11 +50,11 @@ func ProcessAssistantMessage(msg map[string]interface{}, cwd string) (string, []
 	if contentArray, ok := msg["content"].([]interface{}); ok {
 		for _, item := range contentArray {
 			if contentItem, ok := item.(map[string]interface{}); ok {
-				contentType := GetStringValue(contentItem, "type")
+				contentType := utils.ExtractString(contentItem, "type")
 
 				switch contentType {
 				case ContentTypeText:
-					text := GetStringValue(contentItem, "text")
+					text := utils.ExtractString(contentItem, "text")
 					if text != "" {
 						content.WriteString(text)
 					}

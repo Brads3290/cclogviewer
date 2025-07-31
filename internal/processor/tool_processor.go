@@ -5,6 +5,7 @@ import (
 
 	"github.com/brads3290/cclogviewer/internal/models"
 	"github.com/brads3290/cclogviewer/internal/processor/tools"
+	"github.com/brads3290/cclogviewer/internal/utils"
 )
 
 // ToolProcessor formats and processes tool calls.
@@ -58,8 +59,8 @@ func (tp *ToolProcessor) ProcessToolCall(toolCall *models.ToolCall) {
 // This replaces the standalone ProcessToolUse function
 func (tp *ToolProcessor) ProcessToolUseWithRegistry(toolUse map[string]interface{}) models.ToolCall {
 	tool := models.ToolCall{
-		ID:   GetStringValue(toolUse, "id"),
-		Name: GetStringValue(toolUse, "name"),
+		ID:   utils.ExtractString(toolUse, "id"),
+		Name: utils.ExtractString(toolUse, "name"),
 	}
 
 	if input, ok := toolUse["input"].(map[string]interface{}); ok {

@@ -3,6 +3,8 @@ package formatters
 import (
 	"fmt"
 	"html/template"
+
+	"github.com/brads3290/cclogviewer/internal/utils"
 )
 
 // WriteFormatter formats Write tool inputs and outputs.
@@ -34,13 +36,7 @@ func (f *WriteFormatter) FormatInput(data map[string]interface{}) (template.HTML
 
 // ValidateInput validates the input for the Write tool
 func (f *WriteFormatter) ValidateInput(data map[string]interface{}) error {
-	required := []string{"file_path", "content"}
-	for _, field := range required {
-		if _, exists := data[field]; !exists {
-			return fmt.Errorf("missing required field: %s", field)
-		}
-	}
-	return nil
+	return utils.ValidateRequiredFields(data, "file_path", "content")
 }
 
 // GetDescription returns a custom description for the Write tool

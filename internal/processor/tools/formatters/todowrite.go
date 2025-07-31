@@ -3,6 +3,8 @@ package formatters
 import (
 	"fmt"
 	"html/template"
+
+	"github.com/brads3290/cclogviewer/internal/utils"
 )
 
 // TodoWriteFormatter formats TodoWrite tool inputs and outputs.
@@ -25,7 +27,7 @@ func (f *TodoWriteFormatter) FormatInput(data map[string]interface{}) (template.
 
 // ValidateInput validates the input for the TodoWrite tool
 func (f *TodoWriteFormatter) ValidateInput(data map[string]interface{}) error {
-	todos := f.extractSlice(data, "todos")
+	todos := utils.ExtractSlice(data, "todos")
 	if todos == nil {
 		return fmt.Errorf("missing required field: todos")
 	}

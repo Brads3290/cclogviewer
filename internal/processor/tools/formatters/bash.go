@@ -5,6 +5,7 @@ import (
 	"html/template"
 
 	"github.com/brads3290/cclogviewer/internal/processor/tools"
+	"github.com/brads3290/cclogviewer/internal/utils"
 )
 
 // BashFormatter formats Bash tool inputs and outputs.
@@ -75,10 +76,7 @@ func (f *BashFormatter) FormatInputWithCWD(data map[string]interface{}, cwd stri
 
 // ValidateInput validates the input for the Bash tool
 func (f *BashFormatter) ValidateInput(data map[string]interface{}) error {
-	if f.extractString(data, "command") == "" {
-		return fmt.Errorf("missing required field: command")
-	}
-	return nil
+	return utils.ValidateRequiredField(data, "command")
 }
 
 // GetDescription returns a custom description for the Bash tool

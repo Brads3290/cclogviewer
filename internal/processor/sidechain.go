@@ -127,7 +127,7 @@ func (s *SidechainProcessor) matchTaskWithSidechain(ctx *TaskMatchContext) {
 	)
 
 	if bestMatch != nil {
-		ctx.ToolCall.TaskEntries = s.collectSidechainEntries(bestMatch, ctx.EntryMap)
+		ctx.ToolCall.TaskEntries = collectSidechainEntries(bestMatch, ctx.EntryMap)
 		ctx.MatchedSidechains[bestMatch.UUID] = true
 		if debug.Enabled {
 			log.Printf("Matched Task tool %s to sidechain %s (score: %d, entries: %d)",
@@ -262,8 +262,8 @@ func (s *SidechainProcessor) findBestMatchingSidechain(
 		}
 
 		// Get first user message and last assistant message from sidechain
-		firstUser := s.getFirstUserMessage(sidechain, entryMap)
-		lastAssistant := s.getLastAssistantMessage(sidechain, entryMap)
+		firstUser := getFirstUserMessage(sidechain, entryMap)
+		lastAssistant := getLastAssistantMessage(sidechain, entryMap)
 
 		if firstUser == "" || lastAssistant == "" {
 			if debug.Enabled {
@@ -332,19 +332,6 @@ func (s *SidechainProcessor) calculateMatchScore(
 }
 
 // collectSidechainEntries collects all entries in a sidechain conversation
-func (s *SidechainProcessor) collectSidechainEntries(root *models.ProcessedEntry, entryMap map[string]*models.ProcessedEntry) []*models.ProcessedEntry {
-	return collectSidechainEntries(root, entryMap)
-}
-
-// getFirstUserMessage finds the first user message in a sidechain conversation
-func (s *SidechainProcessor) getFirstUserMessage(root *models.ProcessedEntry, entryMap map[string]*models.ProcessedEntry) string {
-	return getFirstUserMessage(root, entryMap)
-}
-
-// getLastAssistantMessage finds the last assistant message in a sidechain conversation
-func (s *SidechainProcessor) getLastAssistantMessage(root *models.ProcessedEntry, entryMap map[string]*models.ProcessedEntry) string {
-	return getLastAssistantMessage(root, entryMap)
-}
 
 // identifySidechainBoundaries identifies the start and end points of sidechain conversations
 func (s *SidechainProcessor) identifySidechainBoundaries(entries []*models.ProcessedEntry) []SidechainContext {

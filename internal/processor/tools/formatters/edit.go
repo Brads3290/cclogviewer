@@ -1,10 +1,10 @@
 package formatters
 
 import (
-	"fmt"
 	"html/template"
 
 	"github.com/brads3290/cclogviewer/internal/processor/tools/diff"
+	"github.com/brads3290/cclogviewer/internal/utils"
 )
 
 // EditFormatter formats Edit tool inputs and outputs.
@@ -33,13 +33,7 @@ func (f *EditFormatter) FormatInput(data map[string]interface{}) (template.HTML,
 
 // ValidateInput validates the input for the Edit tool
 func (f *EditFormatter) ValidateInput(data map[string]interface{}) error {
-	required := []string{"file_path", "old_string", "new_string"}
-	for _, field := range required {
-		if f.extractString(data, field) == "" {
-			return fmt.Errorf("missing required field: %s", field)
-		}
-	}
-	return nil
+	return utils.ValidateRequiredFields(data, "file_path", "old_string", "new_string")
 }
 
 // GetDescription returns a custom description for the Edit tool

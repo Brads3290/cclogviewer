@@ -3,6 +3,8 @@ package formatters
 import (
 	"fmt"
 	"html/template"
+
+	"github.com/brads3290/cclogviewer/internal/utils"
 )
 
 // ReadFormatter formats Read tool inputs and outputs.
@@ -26,10 +28,7 @@ func (f *ReadFormatter) FormatInput(data map[string]interface{}) (template.HTML,
 
 // ValidateInput validates the input for the Read tool
 func (f *ReadFormatter) ValidateInput(data map[string]interface{}) error {
-	if f.extractString(data, "file_path") == "" {
-		return fmt.Errorf("missing required field: file_path")
-	}
-	return nil
+	return utils.ValidateRequiredField(data, "file_path")
 }
 
 // GetDescription returns a custom description for the Read tool

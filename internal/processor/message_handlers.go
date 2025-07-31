@@ -2,6 +2,7 @@ package processor
 
 import (
 	"github.com/brads3290/cclogviewer/internal/models"
+	"github.com/brads3290/cclogviewer/internal/utils"
 	"strings"
 )
 
@@ -16,7 +17,7 @@ var messageHandlers = map[string]MessageHandler{
 
 // processMessage processes a message using the appropriate handler
 func processMessage(processed *models.ProcessedEntry, msg map[string]interface{}, entry models.LogEntry) error {
-	processed.Role = GetStringValue(msg, "role")
+	processed.Role = utils.ExtractString(msg, "role")
 
 	if handler, ok := messageHandlers[processed.Type]; ok {
 		return handler(processed, msg, entry)
@@ -78,8 +79,8 @@ func extractToolResultData(processed *models.ProcessedEntry, msg map[string]inte
 		return
 	}
 
-	processed.IsError = GetBoolValue(toolResult, "is_error")
-	processed.ToolResultID = GetStringValue(toolResult, "tool_use_id")
+	processed.IsError = utils.ExtractBool(toolResult, "is_error")
+	processed.ToolResultID = utils.ExtractString(toolResult, "tool_use_id")
 }
 
 // TokenProcessor calculates and tracks token usage.

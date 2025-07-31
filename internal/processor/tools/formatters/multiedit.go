@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/brads3290/cclogviewer/internal/processor/tools/diff"
+	"github.com/brads3290/cclogviewer/internal/utils"
 )
 
 // MultiEditFormatter formats MultiEdit tool inputs and outputs.
@@ -64,8 +65,8 @@ func (f *MultiEditFormatter) FormatInput(data map[string]interface{}) (template.
 
 // ValidateInput validates the input for the MultiEdit tool
 func (f *MultiEditFormatter) ValidateInput(data map[string]interface{}) error {
-	if f.extractString(data, "file_path") == "" {
-		return fmt.Errorf("missing required field: file_path")
+	if err := utils.ValidateRequiredField(data, "file_path"); err != nil {
+		return err
 	}
 
 	edits := f.extractSlice(data, "edits")

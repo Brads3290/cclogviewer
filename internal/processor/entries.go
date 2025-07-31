@@ -3,6 +3,7 @@ package processor
 import (
 	"encoding/json"
 	"github.com/brads3290/cclogviewer/internal/models"
+	"github.com/brads3290/cclogviewer/internal/utils"
 	"strings"
 	"time"
 )
@@ -168,27 +169,13 @@ func formatTimestamp(ts string) string {
 func isToolResult(msg map[string]interface{}) bool {
 	if content, ok := msg["content"].([]interface{}); ok && len(content) > 0 {
 		if toolResult, ok := content[0].(map[string]interface{}); ok {
-			return GetStringValue(toolResult, "type") == TypeToolResult
+			return utils.ExtractString(toolResult, "type") == TypeToolResult
 		}
 	}
 	return false
 }
 
-// GetStringValue safely extracts a string value from a map.
-func GetStringValue(m map[string]interface{}, key string) string {
-	if val, ok := m[key].(string); ok {
-		return val
-	}
-	return ""
-}
 
-// GetBoolValue safely extracts a bool value from a map.
-func GetBoolValue(m map[string]interface{}, key string) bool {
-	if val, ok := m[key].(bool); ok {
-		return val
-	}
-	return false
-}
 
 // extractContent extracts text content from a ProcessedEntry
 func extractContent(entry *models.ProcessedEntry) string {
