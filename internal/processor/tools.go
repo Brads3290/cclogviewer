@@ -3,9 +3,9 @@ package processor
 import (
 	"html/template"
 
-	"github.com/Brads3290/cclogviewer/internal/models"
-	"github.com/Brads3290/cclogviewer/internal/processor/tools"
-	"github.com/Brads3290/cclogviewer/internal/processor/tools/formatters"
+	"github.com/brads3290/cclogviewer/internal/models"
+	"github.com/brads3290/cclogviewer/internal/processor/tools"
+	"github.com/brads3290/cclogviewer/internal/processor/tools/formatters"
 )
 
 var registry *tools.FormatterRegistry

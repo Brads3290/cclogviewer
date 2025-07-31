@@ -3,7 +3,7 @@ package processor
 import (
 	"log"
 
-	"github.com/Brads3290/cclogviewer/internal/models"
+	"github.com/brads3290/cclogviewer/internal/models"
 )
 
 // initializeProcessingState creates and initializes a new processing state

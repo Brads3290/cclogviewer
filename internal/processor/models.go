@@ -1,7 +1,7 @@
 package processor
 
 import (
-	"github.com/Brads3290/cclogviewer/internal/models"
+	"github.com/brads3290/cclogviewer/internal/models"
 	"time"
 )
 

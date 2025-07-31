@@ -1,6 +1,6 @@
 package processor
 
-import "github.com/Brads3290/cclogviewer/internal/models"
+import "github.com/brads3290/cclogviewer/internal/models"
 
 // HierarchyBuilder builds parent-child relationships and calculates depths
 type HierarchyBuilder struct{}

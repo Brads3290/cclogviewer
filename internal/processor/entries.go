@@ -2,7 +2,7 @@ package processor
 
 import (
 	"encoding/json"
-	"github.com/Brads3290/cclogviewer/internal/models"
+	"github.com/brads3290/cclogviewer/internal/models"
 	"strings"
 	"time"
 )

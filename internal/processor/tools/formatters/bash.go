@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/Brads3290/cclogviewer/internal/processor/tools"
+	"github.com/brads3290/cclogviewer/internal/processor/tools"
 )
 
 // BashFormatter formats the Bash tool

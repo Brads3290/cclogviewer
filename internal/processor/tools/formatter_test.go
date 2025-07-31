@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Brads3290/cclogviewer/internal/processor/tools"
-	"github.com/Brads3290/cclogviewer/internal/processor/tools/formatters"
+	"github.com/brads3290/cclogviewer/internal/processor/tools"
+	"github.com/brads3290/cclogviewer/internal/processor/tools/formatters"
 )
 
 func TestFormatterRegistry(t *testing.T) {

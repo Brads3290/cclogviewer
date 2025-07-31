@@ -7,14 +7,14 @@ Converts Claude Code JSONL log files into interactive HTML.
 Requires Go 1.21 or later. Install Go from https://go.dev/
 
 ```bash
-git clone https://github.com/Brads3290/cclogviewer
+git clone https://github.com/brads3290/cclogviewer
 cd cclogviewer
 make build
 ```
 
 Or install directly:
 ```bash
-go install github.com/Brads3290/cclogviewer/cmd/cclogviewer@latest
+go install github.com/brads3290/cclogviewer/cmd/cclogviewer@latest
 ```
 
 ## Usage

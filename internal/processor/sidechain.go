@@ -3,8 +3,8 @@ package processor
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Brads3290/cclogviewer/internal/debug"
-	"github.com/Brads3290/cclogviewer/internal/models"
+	"github.com/brads3290/cclogviewer/internal/debug"
+	"github.com/brads3290/cclogviewer/internal/models"
 	"log"
 	"strings"
 )

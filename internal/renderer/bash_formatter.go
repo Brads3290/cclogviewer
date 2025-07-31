@@ -2,8 +2,8 @@ package renderer
 
 import (
 	"fmt"
-	"github.com/Brads3290/cclogviewer/internal/models"
-	"github.com/Brads3290/cclogviewer/internal/processor"
+	"github.com/brads3290/cclogviewer/internal/models"
+	"github.com/brads3290/cclogviewer/internal/processor"
 	"html"
 	"html/template"
 	"strings"

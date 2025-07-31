@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"strings"
 
-	"github.com/Brads3290/cclogviewer/internal/processor/tools/diff"
+	"github.com/brads3290/cclogviewer/internal/processor/tools/diff"
 )
 
 // MultiEditFormatter formats the MultiEdit tool

@@ -182,7 +182,7 @@ const (
 
 ```go
 import (
-    "github.com/Brads3290/cclogviewer/internal/constants"
+    "github.com/brads3290/cclogviewer/internal/constants"
 )
 
 func ReadJSONLFile(filename string) ([]models.LogEntry, error) {
@@ -209,7 +209,7 @@ func ReadJSONLFile(filename string) ([]models.LogEntry, error) {
 **File**: `internal/processor/entries.go`
 
 ```go
-import "github.com/Brads3290/cclogviewer/internal/constants"
+import "github.com/brads3290/cclogviewer/internal/constants"
 
 func processEntry(state *ProcessingState, entry *models.ProcessedEntry) {
     // Before:

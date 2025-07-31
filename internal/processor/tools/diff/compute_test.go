@@ -3,7 +3,7 @@ package diff_test
 import (
 	"testing"
 
-	"github.com/Brads3290/cclogviewer/internal/processor/tools/diff"
+	"github.com/brads3290/cclogviewer/internal/processor/tools/diff"
 )
 
 func TestComputeLineDiff(t *testing.T) {

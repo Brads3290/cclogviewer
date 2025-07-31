@@ -3,9 +3,9 @@ package parser
 import (
 	"bufio"
 	"encoding/json"
-	"github.com/Brads3290/cclogviewer/internal/debug"
-	"github.com/Brads3290/cclogviewer/internal/models"
-	"github.com/Brads3290/cclogviewer/internal/processor"
+	"github.com/brads3290/cclogviewer/internal/debug"
+	"github.com/brads3290/cclogviewer/internal/models"
+	"github.com/brads3290/cclogviewer/internal/processor"
 	"log"
 	"os"
 )

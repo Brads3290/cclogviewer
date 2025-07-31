@@ -1,3 +1,3 @@
-module github.com/Brads3290/cclogviewer
+module github.com/brads3290/cclogviewer
 
 go 1.21

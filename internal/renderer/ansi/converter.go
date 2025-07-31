@@ -1,7 +1,7 @@
 package ansi
 
 import (
-	"github.com/Brads3290/cclogviewer/internal/renderer/builders"
+	"github.com/brads3290/cclogviewer/internal/renderer/builders"
 )
 
 // ANSIConverter converts ANSI escape sequences to HTML

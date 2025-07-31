@@ -2,7 +2,7 @@ package builders
 
 import (
 	"fmt"
-	"github.com/Brads3290/cclogviewer/internal/processor"
+	"github.com/brads3290/cclogviewer/internal/processor"
 	"html"
 	"strings"
 )

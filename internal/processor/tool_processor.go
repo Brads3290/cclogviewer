@@ -3,8 +3,8 @@ package processor
 import (
 	"html/template"
 
-	"github.com/Brads3290/cclogviewer/internal/models"
-	"github.com/Brads3290/cclogviewer/internal/processor/tools"
+	"github.com/brads3290/cclogviewer/internal/models"
+	"github.com/brads3290/cclogviewer/internal/processor/tools"
 )
 
 // ToolProcessor handles all tool-related processing

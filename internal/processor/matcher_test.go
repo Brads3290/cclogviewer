@@ -3,7 +3,7 @@ package processor
 import (
 	"testing"
 
-	"github.com/Brads3290/cclogviewer/internal/models"
+	"github.com/brads3290/cclogviewer/internal/models"
 )
 
 func TestMatchToolCalls(t *testing.T) {
