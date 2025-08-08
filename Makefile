@@ -19,9 +19,14 @@ VERSION?=1.0.0
 BUILD_TIME=$(shell date +%FT%T%z)
 LDFLAGS=-ldflags "-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME}"
 
-# Installation directory
-PREFIX?=/usr/local
-INSTALL_DIR=$(PREFIX)/bin
+# Installation directory - defaults to GOPATH/bin or GOBIN if set
+GOPATH?=$(shell go env GOPATH)
+GOBIN?=$(shell go env GOBIN)
+ifeq ($(GOBIN),)
+    INSTALL_DIR=$(GOPATH)/bin
+else
+    INSTALL_DIR=$(GOBIN)
+endif
 
 # Default target
 .DEFAULT_GOAL := build
@@ -126,8 +131,8 @@ release: build-all
 help:
 	@echo "Available targets:"
 	@echo "  make build          - Build the binary"
-	@echo "  make install        - Install binary to $(INSTALL_DIR)"
-	@echo "  make uninstall      - Remove binary from $(INSTALL_DIR)"
+	@echo "  make install        - Install binary to Go bin directory ($(INSTALL_DIR))"
+	@echo "  make uninstall      - Remove binary from Go bin directory"
 	@echo "  make clean          - Clean build artifacts"
 	@echo "  make deps           - Download and tidy dependencies"
 	@echo "  make fmt            - Format Go code"
@@ -140,7 +145,8 @@ help:
 	@echo "  make build-all      - Build for all platforms"
 	@echo "  make release        - Create release archives"
 	@echo ""
-	@echo "Installation prefix can be changed with PREFIX:"
-	@echo "  make install PREFIX=/opt/local"
+	@echo "Installation directory is determined by:"
+	@echo "  - GOBIN if set, otherwise"
+	@echo "  - GOPATH/bin (currently: $(INSTALL_DIR))"
 
 .PHONY: build build-release install uninstall clean deps fmt lint test test-coverage test-coverage-report test-integration benchmark test-all build-all build-linux build-darwin build-windows release help

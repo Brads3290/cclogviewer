@@ -63,7 +63,7 @@ func checkMissingToolResults(entry *models.ProcessedEntry) {
 
 // calculateTokensForEntry recursively aggregates tokens across nested tool calls.
 func calculateTokensForEntry(entry *models.ProcessedEntry) {
-	entry.TotalTokens = entry.InputTokens + entry.OutputTokens +
+	entry.TotalTokens = entry.InputTokens +
 		entry.CacheReadTokens + entry.CacheCreationTokens
 
 	// Calculate for tool calls
@@ -73,7 +73,6 @@ func calculateTokensForEntry(entry *models.ProcessedEntry) {
 		// Calculate for tool result
 		if toolCall.Result != nil {
 			toolCall.Result.TotalTokens = toolCall.Result.InputTokens +
-				toolCall.Result.OutputTokens +
 				toolCall.Result.CacheReadTokens + toolCall.Result.CacheCreationTokens
 		}
 

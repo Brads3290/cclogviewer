@@ -155,7 +155,7 @@ func TestCheckMissingToolResults_Simple(t *testing.T) {
 }
 
 func TestCalculateTokensForEntry_Simple(t *testing.T) {
-	t.Run("calculates total tokens", func(t *testing.T) {
+	t.Run("calculates total tokens excluding output", func(t *testing.T) {
 		entry := &models.ProcessedEntry{
 			TokenMetrics: models.TokenMetrics{
 				InputTokens:         100,
@@ -166,7 +166,7 @@ func TestCalculateTokensForEntry_Simple(t *testing.T) {
 		}
 
 		calculateTokensForEntry(entry)
-		assert.Equal(t, 375, entry.TotalTokens)
+		assert.Equal(t, 175, entry.TotalTokens)
 	})
 }
 

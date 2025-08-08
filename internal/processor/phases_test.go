@@ -110,12 +110,12 @@ func TestCalculateAllTokens(t *testing.T) {
 
 	calculateAllTokens(entries)
 
-	// Check token calculations
-	if entries[0].TotalTokens != 170 { // 100 + 50 + 20
-		t.Errorf("Expected TotalTokens=170 for entry 1, got %d", entries[0].TotalTokens)
+	// Check token calculations (excluding output tokens)
+	if entries[0].TotalTokens != 120 { // 100 + 20 (excluding 50 output)
+		t.Errorf("Expected TotalTokens=120 for entry 1, got %d", entries[0].TotalTokens)
 	}
 
-	if entries[1].TotalTokens != 230 { // 200 + 30
+	if entries[1].TotalTokens != 230 { // 200 + 30 (no output tokens)
 		t.Errorf("Expected TotalTokens=230 for entry 2, got %d", entries[1].TotalTokens)
 	}
 }
